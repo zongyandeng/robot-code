@@ -1,98 +1,134 @@
 package frc.robot;
 
 public final class Constants {
+    
+    // ==========================================
+    // Shooter (發射器/射球機構) 參數
+    // ==========================================
     public final class ShooterConstants {
-        public static final int kTopShooterId = 0;
-        public static final int kBottomShooterId = 0;
+        // 馬達 CAN ID 設定
+        public static final int kTopShooterId = 0;              // 上發射輪 TalonFX 馬達 CAN ID
+        public static final int kBottomShooterId = 0;           // 下發射輪 TalonFX 馬達 CAN ID
         
-        public static final double kShooterVelocityVoltage = 0;
-        public static final double kShooterDutyCycleOut = 0;
+        // 控制物件預設參數 (一般初始化為 0 即可)
+        public static final double kShooterVelocityVoltage = 0; // 閉環速度控制控制器的初始化預設值
+        public static final double kShooterDutyCycleOut = 0;    // 開環百分比控制控制器的初始化預設值
 
-        public static final double kShooterkP = 0.11;
-        public static final double kShooterkI = 0.0;
-        public static final double kShooterkD = 0.005;
-        public static final double kShooterkV = 0.12;
+        // 速度控制 PID & 前饋參數 (Velocity PID & Feedforward)
+        public static final double kShooterkP = 0.11;           // 比例參數：數值越大，馬達達到目標速度越快
+        public static final double kShooterkI = 0.0;            // 積分參數：用於消除靜態誤差，在速度控制中通常設為 0 以防衝過頭
+        public static final double kShooterkD = 0.005;          // 微分參數：防震、防止轉速衝過頭
+        public static final double kShooterkV = 0.12;           // 速度前饋：極為重要！根據馬達最大轉速與電壓估算 (12V / 最大轉速 RPS)
 
-        public static final double kShooterStatorCurrentLimit = 40.0;
-        public static final boolean kShooterStatorCurrentLimitEnable = true;
+        // Stator Current Limit (定子/馬達端限流)：保護馬達與限制最大瞬間扭力
+        public static final double kShooterStatorCurrentLimit = 40.0;        // 定子電流上限 (A)，防止線圈過熱燒毀
+        public static final boolean kShooterStatorCurrentLimitEnable = true; // 是否啟用定子電流限制
 
-        public static final double kShooterSupplyCurrentLimit = 35.0;
-        public static final double kShooterSupplyCurrentLowerLimit = 30.0;
-        public static final double kShooterSupplyCurrentLowerTime = 1.0;
-        public static final boolean kShooterSupplyCurrentLimitEnable = true;
+        // Supply Current Limit (電源/電池端限流)：保護電池防降壓 (Brownout)
+        public static final double kShooterSupplyCurrentLimit = 35.0;        // 主電流限制 (A)：容許瞬間加速抽電的最高值
+        public static final double kShooterSupplyCurrentLowerLimit = 30.0;   // 次電流限制 (A)：若持續限流，會降到此數值以防止長期過熱
+        public static final double kShooterSupplyCurrentLowerTime = 1.0;     // 時間閥值 (秒)：卡在主限制超過 1 秒後，才降到次限制
+        public static final boolean kShooterSupplyCurrentLimitEnable = true;  // 是否啟用電源端電流限制
 
-        public static final double kShooterVoltageClosedLoopRampPeriod = 0.25;
+        // 電壓閉環斜率 (Voltage Ramp Rate)
+        public static final double kShooterVoltageClosedLoopRampPeriod = 0.25; // 電壓從 0V 升到 12V 最快所需的秒數，能平滑加速、保護機構
     }
 
+    // ==========================================
+    // Turret (轉塔/旋轉瞄準機構) 參數
+    // ==========================================
     public final class TurretConstants {
-        public static final int kTurretId = 0;
+        // 馬達 CAN ID 設定
+        public static final int kTurretId = 0;                  // 轉塔 TalonFX 馬達 CAN ID
 
-        public static final double kTurretMotionMagicVoltage = 0;
+        // 控制物件預設參數
+        public static final double kTurretMotionMagicVoltage = 0; // Motion Magic 控制器初始化預設值
 
-        public static final double kTurretkP = 12.0;
-        public static final double kTurretkI = 0.0;
-        public static final double kTurretkD = 0.1;
+        // 位置控制 PID 參數 (Position PID)
+        public static final double kTurretkP = 12.0;            // 比例參數：控制轉塔旋轉到目標位置的反應速度與力道
+        public static final double kTurretkI = 0.0;            // 積分參數：通常設為 0
+        public static final double kTurretkD = 0.1;             // 微分參數：防震，減緩接近目標位置時的煞車震動
 
-        public static final double kTurretMotionMagicCruiseVelocity = 10;
-        public static final double kTurretMotionMagicAcceleration = 20;
-        public static final double kTurretdMotionMagicJerk = 0;
+        // Motion Magic 運動軌跡控制參數 (用於平滑位置控制)
+        public static final double kTurretMotionMagicCruiseVelocity = 10; // 巡航轉速 (RPS)：轉塔移動時的最大穩定轉速
+        public static final double kTurretMotionMagicAcceleration = 20;   // 最大加速度 (RPS/s)：轉塔加速到巡航轉速的快慢
+        public static final double kTurretdMotionMagicJerk = 0;          // 加加速度 (Jerk)：限制加速度變化的平滑度 (0 代表不限制)
 
-        public static final double kTurretStatorCurrentLimit = 40.0;
-        public static final boolean kTurretStatorCurrentLimitEnable = true;
+        // Stator Current Limit (定子限流)：防推撞或撞擊極限位置時毀壞機構
+        public static final double kTurretStatorCurrentLimit = 40.0;        // 定子電流上限 (A)
+        public static final boolean kTurretStatorCurrentLimitEnable = true; // 是否啟用定子電流限制
 
-        public static final double kTurretSupplyCurrentLimit = 35.0;
-        public static final double kTurretSupplyCurrentLowerLimit = 30.0;
-        public static final double kTurretSupplyCurrentLowerTime = 1.0;
-        public static final boolean kTurretSupplyCurrentLimitEnable = true;
-
-
+        // Supply Current Limit (電源端限流)：防止卡死堵轉時將電池電量抽乾
+        public static final double kTurretSupplyCurrentLimit = 35.0;        // 主電流限制 (A)
+        public static final double kTurretSupplyCurrentLowerLimit = 30.0;   // 次電流限制 (A)
+        public static final double kTurretSupplyCurrentLowerTime = 1.0;     // 時間閥值 (秒)
+        public static final boolean kTurretSupplyCurrentLimitEnable = true;  // 是否啟用電源端電流限制
     }
 
+    // ==========================================
+    // Hood (仰角/發射面板角度調整機構) 參數
+    // ==========================================
     public final class HoodConstants {
-        public static final int kHoodId = 0;
+        // 馬達 CAN ID 設定
+        public static final int kHoodId = 0;                    // 仰角調整 TalonFX 馬達 CAN ID
 
-        public static final double kHoodMotionMagicVoltage = 0;
+        // 控制物件預設參數
+        public static final double kHoodMotionMagicVoltage = 0;  // Motion Magic 控制器初始化預設值
 
-        public static final double kHoodkP = 12.0;
-        public static final double kHoodkI = 0.0;
-        public static final double kHoodkD = 0.1;
+        // 位置控制 PID 參數
+        public static final double kHoodkP = 12.0;              // 比例參數：控制仰角反應的速度
+        public static final double kHoodkI = 0.0;              // 積分參數
+        public static final double kHoodkD = 0.1;               // 微分參數
 
-        public static final double kHoodMotionMagicCruiseVelocity = 10;
-        public static final double kHoodMotionMagicAcceleration = 20;
-        public static final double kHoodMotionMagicJerk = 0;
+        // Motion Magic 運動軌跡控制參數
+        public static final double kHoodMotionMagicCruiseVelocity = 10;  // 巡航轉速 (RPS)
+        public static final double kHoodMotionMagicAcceleration = 20;    // 最大加速度 (RPS/s)
+        public static final double kHoodMotionMagicJerk = 0;            // 加加速度 (Jerk)
 
-        public static final double kHoodStatorCurrentLimit = 40.0;
-        public static final boolean kHoodStatorCurrentLimitEnable = true;
+        // Stator Current Limit (定子限流)：防止仰角推到底時將機構頂壞
+        public static final double kHoodStatorCurrentLimit = 40.0;        // 定子電流上限 (A)
+        public static final boolean kHoodStatorCurrentLimitEnable = true; // 是否啟用定子限制
 
-        public static final double kHoodSupplyCurrentLimit = 35.0;
-        public static final double kHoodSupplyCurrentLowerLimit = 30.0;
-        public static final double kHoodSupplyCurrentLowerTime = 1.0;
-        public static final boolean kHoodSupplyCurrentLimitEnable = true;
-        
+        // Supply Current Limit (電源限流)
+        public static final double kHoodSupplyCurrentLimit = 35.0;        // 主電流限制 (A)
+        public static final double kHoodSupplyCurrentLowerLimit = 30.0;   // 次電流限制 (A)
+        public static final double kHoodSupplyCurrentLowerTime = 1.0;     // 時間閥值 (秒)
+        public static final boolean kHoodSupplyCurrentLimitEnable = true;  // 是否啟用電源限制
     }
 
+    // ==========================================
+    // Feeder (進料/分球機構) 參數
+    // ==========================================
     public final class FeederConstants {
-        public static final int kFeederId = 0;
+        // 馬達 CAN ID 設定
+        public static final int kFeederId = 0;                  // 進料分球 TalonFX 馬達 CAN ID
 
-        public static final double kFeederMotionMagicVoltage = 0;
+        // 控制物件預設參數
+        public static final double kFeederMotionMagicVoltage = 0; // Motion Magic 控制器初始化預設值
 
-        public static final double kFeederRotationPerStep = 12.0 * (60.0 / 360.0);
+        // 機構物理參數
+        // 假設機構與馬達之間的齒輪比為 12:1 (馬達轉 12 圈，分球盤轉 1 圈)
+        // 分球盤轉 60 度相當於 1/6 圈，因此馬達每次步進需要轉動 12 * (1.0 / 6.0) = 2.0 圈
+        public static final double kFeederRotationPerStep = 12.0 * (60.0 / 360.0); // 每次進料按鈕按下的目標步進圈數
 
-        public static final double kFeederkP = 15.0;
-        public static final double kFeederkI = 0.0;
-        public static final double kFeederkD = 0.1;
+        // 位置控制 PID 參數
+        public static final double kFeederkP = 15.0;            // 比例參數：控制分球旋轉的精準度與反應速度
+        public static final double kFeederkI = 0.0;            // 積分參數
+        public static final double kFeederkD = 0.1;             // 微分參數
 
-        public static final double kFeederMotionMagicCruiseVelocity = 15;
-        public static final double kFeederMotionMagicAcceleration = 30;
-        public static final double kFeederMotionMagicJerk = 0;
+        // Motion Magic 運動軌跡控制參數
+        public static final double kFeederMotionMagicCruiseVelocity = 15; // 巡航轉速 (RPS)
+        public static final double kFeederMotionMagicAcceleration = 30;   // 最大加速度 (RPS/s)
+        public static final double kFeederMotionMagicJerk = 0;            // 加加速度 (Jerk)
 
-        public static final double kFeederStatorCurrentLimit = 40.0;
-        public static final boolean kFeederStatorCurrentLimitEnable = true;
+        // Stator Current Limit (定子限流)：非常重要！當進料卡球堵轉時，限制最大扭力避免把球夾碎或損壞機構
+        public static final double kFeederStatorCurrentLimit = 40.0;        // 定子電流上限 (A)
+        public static final boolean kFeederStatorCurrentLimitEnable = true; // 是否啟用定子限流
 
-        public static final double kFeederSupplyCurrentLimit = 35.0;
-        public static final double kFeederSupplyCurrentLowerLimit = 30.0;
-        public static final double kFeederSupplyCurrentLowerTime = 1.0;
-        public static final boolean kFeederSupplyCurrentLimitEnable = true;
-        
+        // Supply Current Limit (電源限流)
+        public static final double kFeederSupplyCurrentLimit = 35.0;        // 主電流限制 (A)
+        public static final double kFeederSupplyCurrentLowerLimit = 30.0;   // 次電流限制 (A)
+        public static final double kFeederSupplyCurrentLowerTime = 1.0;     // 時間閥值 (秒)
+        public static final boolean kFeederSupplyCurrentLimitEnable = true;  // 是否啟用電源限流
     }
 }
