@@ -12,8 +12,6 @@ public class Feeder extends SubsystemBase{
     private final TalonFX feeder_motor = new TalonFX(FeederConstants.kFeederId);
     private final MotionMagicVoltage m_motionMagicVoltage = new MotionMagicVoltage(FeederConstants.kFeederMotionMagicVoltage);
 
-    // 假設機構與馬達之間的齒輪比為 12:1 (馬達轉 12 圈，分球盤轉 1 圈)
-    // 分球盤轉 60 度相當於 1/6 圈，因此馬達需要轉 12 * (1.0 / 6.0) = 2.0 圈
     private final double kRotationsPerStep = FeederConstants.kFeederRotationPerStep;
 
     public Feeder() {

@@ -13,17 +13,16 @@ import frc.robot.Constants.ShooterConstants;;
 public class Shooter extends SubsystemBase{
     private final TalonFX topShooter_motor = new TalonFX(ShooterConstants.kTopShooterId);
     private final TalonFX bottomShooter_motor = new TalonFX(ShooterConstants.kBottomShooterId);
-    //速度控制物件(用於閉環控制)
+
     private final VelocityVoltage m_velocityControl = new VelocityVoltage(ShooterConstants.kShooterVelocityVoltage);
-    //百分比控制物件(用於開環控制)
     private final DutyCycleOut m_dutyCycleControl = new DutyCycleOut(ShooterConstants.kShooterDutyCycleOut);
 
     public Shooter() {
         var config = new TalonFXConfiguration();
-        config.Slot0.kP = ShooterConstants.kShooterkP;  // 比例參數：數值越大，馬達達到目標速度越快
-        config.Slot0.kI = ShooterConstants.kShooterkI;   // 積分參數
-        config.Slot0.kD = ShooterConstants.kShooterkD; // 微分參數：防震防止轉速衝過頭
-        config.Slot0.kV = ShooterConstants.kShooterkV;  // 速度前饋：極為重要！根據馬達的最大轉速與電壓估算 (12V / 最大約 100 RPS)
+        config.Slot0.kP = ShooterConstants.kShooterkP;  
+        config.Slot0.kI = ShooterConstants.kShooterkI; 
+        config.Slot0.kD = ShooterConstants.kShooterkD; 
+        config.Slot0.kV = ShooterConstants.kShooterkV;  
 
         config.CurrentLimits.StatorCurrentLimit = ShooterConstants.kShooterStatorCurrentLimit;
         config.CurrentLimits.StatorCurrentLimitEnable = ShooterConstants.kShooterStatorCurrentLimitEnable;
@@ -33,8 +32,6 @@ public class Shooter extends SubsystemBase{
         config.CurrentLimits.SupplyCurrentLowerTime = ShooterConstants.kShooterSupplyCurrentLowerTime;
         config.CurrentLimits.SupplyCurrentLimitEnable = ShooterConstants.kShooterSupplyCurrentLimitEnable;
 
-        //閉環斜率(單位 : 從0V升到12V所需的秒數)
-        //例如設為0.25秒，代表馬達電壓不能再0.25秒內邊畫超過12V，這會讓加速更平滑
         config.ClosedLoopRamps.VoltageClosedLoopRampPeriod = ShooterConstants.kShooterVoltageClosedLoopRampPeriod;
 
         topShooter_motor.getConfigurator().apply(config);

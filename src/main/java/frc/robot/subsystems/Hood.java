@@ -11,18 +11,17 @@ import frc.robot.Constants.HoodConstants;
 public class Hood extends SubsystemBase {
 
     private final TalonFX hood_motor = new TalonFX(HoodConstants.kHoodId);
-    // 建立一個位置控制請求物件
+
     private final MotionMagicVoltage m_motionMagicVoltage = new MotionMagicVoltage(HoodConstants.kHoodMotionMagicVoltage);
 
     public Hood() {
-        // 設定馬達的 PID 參數，讓馬達知道如何自我微調、不衝過頭
         var config = new TalonFXConfiguration();
-        config.Slot0.kP = HoodConstants.kHoodkP; // 比例參數：數值越大，馬達反應越快，但太大會抖動
-        config.Slot0.kI = HoodConstants.kHoodkI; //機分參數
-        config.Slot0.kD = HoodConstants.kHoodkD; // 微分參數：用來減速防震，防止馬達衝過頭
+        config.Slot0.kP = HoodConstants.kHoodkP;
+        config.Slot0.kI = HoodConstants.kHoodkI;
+        config.Slot0.kD = HoodConstants.kHoodkD; 
 
-        config.MotionMagic.MotionMagicCruiseVelocity = HoodConstants.kHoodMotionMagicCruiseVelocity; //最大速度(圈/秒)
-        config.MotionMagic.MotionMagicAcceleration = HoodConstants.kHoodMotionMagicAcceleration; //最大加速度
+        config.MotionMagic.MotionMagicCruiseVelocity = HoodConstants.kHoodMotionMagicCruiseVelocity; 
+        config.MotionMagic.MotionMagicAcceleration = HoodConstants.kHoodMotionMagicAcceleration; 
         config.MotionMagic.MotionMagicJerk = HoodConstants.kHoodMotionMagicJerk;
 
         config.CurrentLimits.StatorCurrentLimit = HoodConstants.kHoodStatorCurrentLimit;
