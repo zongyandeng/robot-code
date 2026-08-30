@@ -14,6 +14,10 @@ public final class Constants {
         public static final double kShooterVelocityVoltage = 0; // 閉環速度控制控制器的初始化預設值
         public static final double kShooterDutyCycleOut = 0;    // 開環百分比控制控制器的初始化預設值
 
+        //用於發佈到圖表的目標轉速追蹤變數
+        public static final double kTopShooterTargetRPS = 0.0;     // 目標轉速 (RPS)   
+        public static final double kBottomShooterTargetRPS = 0.0;  // 目標轉速 (RPS)   
+
         // 速度控制 PID & 前饋參數 (Velocity PID & Feedforward)
         public static final double kShooterkP = 0.11;           // 比例參數：數值越大，馬達達到目標速度越快
         public static final double kShooterkI = 0.0;            // 積分參數：用於消除靜態誤差，在速度控制中通常設為 0 以防衝過頭
@@ -32,6 +36,12 @@ public final class Constants {
 
         // 電壓閉環斜率 (Voltage Ramp Rate)
         public static final double kShooterVoltageClosedLoopRampPeriod = 0.25; // 電壓從 0V 升到 12V 最快所需的秒數，能平滑加速、保護機構
+
+        // 發射輪物理參數 (用於模擬)
+        public static final double kTopShooterGearRatio = 1.0;      // 發射輪與馬達的齒輪比 (假設為 1:1)
+        public static final double kTopShooterFlywheelMOI = 0.0005; // 上發射輪的轉動慣量 (kg*m^2)，用於模擬
+        public static final double kBottomShooterGearRatio = 1.0;   // 下發射輪與馬達的齒輪比 (假設為 1:1)
+        public static final double kBottomShooterFlywheelMOI = 0.0005; // 下發射輪的轉動慣量 (kg*m^2)，用於模擬
     }
 
     // ==========================================
@@ -63,6 +73,13 @@ public final class Constants {
         public static final double kTurretSupplyCurrentLowerLimit = 30.0;   // 次電流限制 (A)
         public static final double kTurretSupplyCurrentLowerTime = 1.0;     // 時間閥值 (秒)
         public static final boolean kTurretSupplyCurrentLimitEnable = true;  // 是否啟用電源端電流限制
+
+        // 轉塔物理參數 (用於模擬)
+        public static final double kTurretGearRatio = 1.0;      // 轉塔與馬達的齒輪比 (假設為 1:1)
+        public static final double kTurretFlywheelMOI = 0.0005; // 轉塔的轉動慣量 (kg*m^2)，用於模擬
+        public static final double kTurretArmLengthMeters = 0.3; // 轉塔旋轉半徑 (公尺)
+        public static final double kTurretMaxAngleRads = Math.PI;     // 轉塔最大旋轉角度 (度)
+        public static final double kTurretMinAngleRads = -Math.PI;      // 轉塔最小旋轉角度 (度)
     }
 
     // ==========================================
@@ -94,6 +111,13 @@ public final class Constants {
         public static final double kHoodSupplyCurrentLowerLimit = 30.0;   // 次電流限制 (A)
         public static final double kHoodSupplyCurrentLowerTime = 1.0;     // 時間閥值 (秒)
         public static final boolean kHoodSupplyCurrentLimitEnable = true;  // 是否啟用電源限制
+
+        // 仰角物理參數 (用於模擬)
+        public static final double kHoodGearRatio = 1.0;        // 仰角與馬達的齒輪比 (假設為 1:1)
+        public static final double kHoodFlywheelMOI = 0.0005; // 仰角的轉動慣量 (kg*m^2)，用於模擬
+        public static final double kHoodArmLengthMeters = 0.3; // 仰角面板的長度/半徑 (公尺)
+        public static final double kHoodMaxAngleRads = Math.PI / 2;     // 仰角最大旋轉角度 (度)
+        public static final double kHoodMinAngleRads = 0.0;      // 仰角最小旋轉角度 (度)
     }
 
     // ==========================================
@@ -130,5 +154,9 @@ public final class Constants {
         public static final double kFeederSupplyCurrentLowerLimit = 30.0;   // 次電流限制 (A)
         public static final double kFeederSupplyCurrentLowerTime = 1.0;     // 時間閥值 (秒)
         public static final boolean kFeederSupplyCurrentLimitEnable = true;  // 是否啟用電源限流
+
+        // 分球機構物理參數 (用於模擬)
+        public static final double kFeederGearRatio = 12.0;      // 分球機構與馬達的齒輪比 (假設為 12:1)
+        public static final double kFeederFlywheelMOI = 0.0005; // 分球機構的轉動慣量 (kg*m^2)，用於模擬
     }
 }
