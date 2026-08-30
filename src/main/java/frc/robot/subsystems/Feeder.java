@@ -84,10 +84,12 @@ public class Feeder extends SubsystemBase{
             m_FlywheelSim.update(0.020);
             // 速度 (圈/秒)
             double simRPS = m_FlywheelSim.getAngularVelocityRPM() / 60.0;
-            m_simState.setRotorVelocity(simRPS);
-            // 位置 (圈)：當前編碼器位置 + (速度 * 時間差)
+            // 將輸出軸轉速乘以齒輪比，得到馬達轉子的轉速
+            double motorVelRPS = simRPS * FeederConstants.kFeederGearRatio;
+            m_simState.setRotorVelocity(motorVelRPS);
             double currentPos = feeder_motor.getPosition().getValueAsDouble();
-            m_simState.setRawRotorPosition(currentPos + simRPS * 0.020);
+            // 累加位置也需使用馬達端轉速
+            m_simState.setRawRotorPosition(currentPos + motorVelRPS * 0.020);
             m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());
         }
     }

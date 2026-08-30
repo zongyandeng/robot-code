@@ -130,8 +130,8 @@ public class Shooter extends SubsystemBase{
             m_topFlywheelSim.update(0.02);
             m_bottomFlywheelSim.update(0.02);
             //獲取物理模你產生的速度(RPM)，轉換成RPS後同步回馬達編碼器
-            double topSimRPS = m_topFlywheelSim.getAngularVelocityRadPerSec() / 60.0;
-            double bottomSimRPS = m_bottomFlywheelSim.getAngularVelocityRadPerSec() / 60.0;
+            double topSimRPS = m_topFlywheelSim.getAngularVelocityRPM() / 60.0;
+            double bottomSimRPS = m_bottomFlywheelSim.getAngularVelocityRPM() / 60.0;
             // 同步回馬達編碼器
             m_topSimState.setRotorVelocity(topSimRPS);
             m_bottomSimState.setRotorVelocity(bottomSimRPS);

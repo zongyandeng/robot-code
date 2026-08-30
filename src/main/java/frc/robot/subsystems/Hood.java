@@ -90,8 +90,8 @@ public class Hood extends SubsystemBase {
             double simPosRads = m_hoodSim.getAngleRads();
             double simVelRadsPerSec = m_hoodSim.getVelocityRadPerSec();
             // 馬達位置與速度 = 物理輸出角度/速度 * 齒輪比 (80.0)
-            double motorPosRotations = (simPosRads / (2.0 * Math.PI)) * 80.0;
-            double motorVelRPS = (simVelRadsPerSec / (2.0 * Math.PI)) * 80.0;
+            double motorPosRotations = (simPosRads / (2.0 * Math.PI)) * HoodConstants.kHoodGearRatio;
+            double motorVelRPS = (simVelRadsPerSec / (2.0 * Math.PI)) * HoodConstants.kHoodGearRatio;
             m_simState.setRawRotorPosition(motorPosRotations);
             m_simState.setRotorVelocity(motorVelRPS);
             m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());

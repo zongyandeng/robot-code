@@ -156,7 +156,7 @@ public final class Constants {
         public static final boolean kFeederSupplyCurrentLimitEnable = true;  // 是否啟用電源限流
 
         // 分球機構物理參數 (用於模擬)
-        public static final double kFeederGearRatio = 12.0;      // 分球機構與馬達的齒輪比 (假設為 12:1)
+        public static final double kFeederGearRatio = 1.0;      // 分球機構與馬達的齒輪比 (假設為 12:1)
         public static final double kFeederFlywheelMOI = 0.0005; // 分球機構的轉動慣量 (kg*m^2)，用於模擬
     }
 }

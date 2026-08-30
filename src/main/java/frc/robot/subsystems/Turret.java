@@ -91,8 +91,8 @@ public class Turret extends SubsystemBase{
             // 請注意：馬達端的編碼器位置 = 物理輸出角度 * 齒輪比
             double simPosRads = m_turretSim.getAngleRads();
             double simVelRadsPerSec = m_turretSim.getVelocityRadPerSec();
-            double motorPosRotations = (simPosRads / (2.0 * Math.PI)) * 50.0;
-            double motorVelRPS = (simVelRadsPerSec / (2.0 * Math.PI)) * 50.0;
+            double motorPosRotations = (simPosRads / (2.0 * Math.PI)) * TurretConstants.kTurretGearRatio;
+            double motorVelRPS = (simVelRadsPerSec / (2.0 * Math.PI)) * TurretConstants.kTurretGearRatio;
             m_simState.setRawRotorPosition(motorPosRotations);
             m_simState.setRotorVelocity(motorVelRPS);
             m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());
