@@ -122,20 +122,25 @@ public class Shooter extends SubsystemBase{
 
     @Override
     public void simulationPeriodic() {
+        // 僅在桌面模擬模式下更新物理狀態
         if(Robot.isSimulation()){
-            //將馬達當前輸出的模擬電壓輸入至飛輪物理模擬器中
+            // 1. 讀取馬達當前被 PID/指令 設定的電壓，並傳入飛輪物理模擬器
             m_topFlywheelSim.setInputVoltage(m_topSimState.getMotorVoltage());
             m_bottomFlywheelSim.setInputVoltage(m_bottomSimState.getMotorVoltage());
-            //進行20ms得物理步進模擬
+            
+            // 2. 進行 20ms 的物理模擬步進 (對應機器人程式標準的 50Hz 週期)
             m_topFlywheelSim.update(0.02);
             m_bottomFlywheelSim.update(0.02);
-            //獲取物理模你產生的速度(RPM)，轉換成RPS後同步回馬達編碼器
+            
+            // 3. 從物理模擬器獲取飛輪在受電壓與阻力影響後的實際轉速 (RPM)，並除以 60 轉換為每秒圈數 (RPS)
             double topSimRPS = m_topFlywheelSim.getAngularVelocityRPM() / 60.0;
             double bottomSimRPS = m_bottomFlywheelSim.getAngularVelocityRPM() / 60.0;
-            // 同步回馬達編碼器
+            
+            // 4. 將模擬出的轉速寫回 TalonFX 的虛擬編碼器，使控制器的閉環回饋能讀取到這個速度
             m_topSimState.setRotorVelocity(topSimRPS);
             m_bottomSimState.setRotorVelocity(bottomSimRPS);
-            //設定模型的電池電壓(供編碼器計算精確數值)
+            
+            // 5. 將虛擬電池電壓同步給馬達，這也是馬達內部進行電壓檢測所必需的
             m_topSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
             m_bottomSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
         }

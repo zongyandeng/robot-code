@@ -50,7 +50,7 @@ public class Hood extends SubsystemBase {
 
         if (Robot.isSimulation()) {
             m_simState = hood_motor.getSimState();
-            // 建立仰角面板的物理模型
+            // 建立仰角調整面板的物理模型 (二階狀態空間系統，考慮仰角慣性)
             LinearSystem<N2, N1, N2> hoodPlant = LinearSystemId.createSingleJointedArmSystem(
                 DCMotor.getKrakenX44(1), 
                 HoodConstants.kHoodFlywheelMOI, 
@@ -85,15 +85,23 @@ public class Hood extends SubsystemBase {
     @Override
     public void simulationPeriodic() {
         if (Robot.isSimulation()) {
+            // 1. 讀取驅動電壓並更新模擬器物理狀態
             m_hoodSim.setInputVoltage(m_simState.getMotorVoltage());
             m_hoodSim.update(0.020);
+            
+            // 2. 獲取物理角度 (Rads) 與速度 (Rad/Sec)
             double simPosRads = m_hoodSim.getAngleRads();
             double simVelRadsPerSec = m_hoodSim.getVelocityRadPerSec();
-            // 馬達位置與速度 = 物理輸出角度/速度 * 齒輪比 (80.0)
+            
+            // 3. 轉換為馬達轉子 (Rotor) 端的位置與速度 (乘以齒輪比)
             double motorPosRotations = (simPosRads / (2.0 * Math.PI)) * HoodConstants.kHoodGearRatio;
             double motorVelRPS = (simVelRadsPerSec / (2.0 * Math.PI)) * HoodConstants.kHoodGearRatio;
+            
+            // 4. 同步至馬達的虛擬編碼器
             m_simState.setRawRotorPosition(motorPosRotations);
             m_simState.setRotorVelocity(motorVelRPS);
+            
+            // 5. 同步虛擬電池電壓
             m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());
         }
     }    

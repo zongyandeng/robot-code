@@ -49,7 +49,7 @@ public class Turret extends SubsystemBase{
 
         if (Robot.isSimulation()) {
             m_simState = turret_motor.getSimState();
-            // 建立轉塔的物理模型 (懸臂系統，維度為 N2)
+            // 建立轉塔的物理模型 (二階狀態空間系統：角度與角速度，維度為 N2)
             LinearSystem<N2, N1, N2> turretPlant = LinearSystemId.createSingleJointedArmSystem(
                 DCMotor.getKrakenX44(1), 
                 TurretConstants.kTurretFlywheelMOI, 
@@ -85,16 +85,23 @@ public class Turret extends SubsystemBase{
     @Override
     public void simulationPeriodic() {
         if (Robot.isSimulation()) {
+            // 1. 讀取馬達驅動電壓輸入給轉臂模擬器
             m_turretSim.setInputVoltage(m_simState.getMotorVoltage());
             m_turretSim.update(0.020);
-            // 轉換弧度到馬達編碼器的圈數 (Rotations = Rads / 2pi)
-            // 請注意：馬達端的編碼器位置 = 物理輸出角度 * 齒輪比
+            
+            // 2. 獲取模擬器計算出的物理角度 (Rads) 與角速度 (Rad/Sec)
             double simPosRads = m_turretSim.getAngleRads();
             double simVelRadsPerSec = m_turretSim.getVelocityRadPerSec();
+            
+            // 3. 轉換單位 (弧度 -> 圈數) 並且乘以齒輪比，得到馬達轉子 (Rotor) 端的數據
             double motorPosRotations = (simPosRads / (2.0 * Math.PI)) * TurretConstants.kTurretGearRatio;
             double motorVelRPS = (simVelRadsPerSec / (2.0 * Math.PI)) * TurretConstants.kTurretGearRatio;
+            
+            // 4. 將數值同步給馬達的虛擬編碼器
             m_simState.setRawRotorPosition(motorPosRotations);
             m_simState.setRotorVelocity(motorVelRPS);
+            
+            // 5. 同步虛擬電池電壓
             m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());
         }
     }    

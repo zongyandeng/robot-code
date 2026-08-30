@@ -50,10 +50,11 @@ public class Feeder extends SubsystemBase{
 
         if (Robot.isSimulation()) {
             m_simState = feeder_motor.getSimState();
-            // 建立 Feeder 的物理模型並初始化模擬器
+            // 建立 Feeder 轉盤的物理模型 (狀態空間表示法，輸入為電壓，輸出為角速度)
             LinearSystem<N1, N1, N1> feederPlant = LinearSystemId.createFlywheelSystem(DCMotor.getKrakenX44(1), FeederConstants.kFeederFlywheelMOI, FeederConstants.kFeederGearRatio);
+            // 初始化飛輪模擬器 (用來模擬分球盤轉動)
             m_FlywheelSim = new FlywheelSim(feederPlant, DCMotor.getKrakenX44(1));
-}
+        }
     }
 
     /** 
@@ -80,16 +81,22 @@ public class Feeder extends SubsystemBase{
     @Override
     public void simulationPeriodic() {
         if (Robot.isSimulation()) {
+            // 1. 讀取馬達驅動電壓輸入模擬器
             m_FlywheelSim.setInputVoltage(m_simState.getMotorVoltage());
             m_FlywheelSim.update(0.020);
-            // 速度 (圈/秒)
+            
+            // 2. 獲取分球盤輸出軸的轉速 (RPS)
             double simRPS = m_FlywheelSim.getAngularVelocityRPM() / 60.0;
-            // 將輸出軸轉速乘以齒輪比，得到馬達轉子的轉速
+            
+            // 3. 將輸出軸轉速乘上齒輪比，轉換成馬達轉子 (Rotor) 端的轉速
             double motorVelRPS = simRPS * FeederConstants.kFeederGearRatio;
             m_simState.setRotorVelocity(motorVelRPS);
+            
+            // 4. 將速度對時間作積分，累加出馬達當前的虛擬位置並同步給編碼器
             double currentPos = feeder_motor.getPosition().getValueAsDouble();
-            // 累加位置也需使用馬達端轉速
             m_simState.setRawRotorPosition(currentPos + motorVelRPS * 0.020);
+            
+            // 5. 同步電池電壓給馬達
             m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());
         }
     }
