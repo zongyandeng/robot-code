@@ -30,17 +30,28 @@ public class Hood extends SubsystemBase {
 
     public Hood() {
         var config = new TalonFXConfiguration();
+        
+        // 1. 位置控制 PID 參數設定
         config.Slot0.kP = HoodConstants.kHoodkP;
         config.Slot0.kI = HoodConstants.kHoodkI;
         config.Slot0.kD = HoodConstants.kHoodkD; 
 
+        // 2. 啟用並設定軟體限位（限制在水平 0 度到向上 90 度之間的圈數，已乘上齒輪比）
+        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = HoodConstants.kHoodForwardSoftLimitEnable;
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = HoodConstants.kHoodForwardSoftLimitThreshold * HoodConstants.kHoodGearRatio; 
+        config.SoftwareLimitSwitch.ReverseSoftLimitEnable = HoodConstants.kHoodReverseSoftLimitEnable;
+        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = HoodConstants.kHoodReverseSoftLimitThreshold * HoodConstants.kHoodGearRatio;
+
+        // 3. Motion Magic 運動軌跡控制參數設定（防仰角面板升降時猛烈撞擊）
         config.MotionMagic.MotionMagicCruiseVelocity = HoodConstants.kHoodMotionMagicCruiseVelocity; 
         config.MotionMagic.MotionMagicAcceleration = HoodConstants.kHoodMotionMagicAcceleration; 
         config.MotionMagic.MotionMagicJerk = HoodConstants.kHoodMotionMagicJerk;
 
+        // 4. 定子電流限制設定（Stator Current Limit）：防止物理卡死時頂壞連桿與機構
         config.CurrentLimits.StatorCurrentLimit = HoodConstants.kHoodStatorCurrentLimit;
         config.CurrentLimits.StatorCurrentLimitEnable = HoodConstants.kHoodStatorCurrentLimitEnable;
 
+        // 5. 電源端電流限制設定（Supply Current Limit）：防止加速抽電導致電壓驟降 (Brownout)
         config.CurrentLimits.SupplyCurrentLimit = HoodConstants.kHoodSupplyCurrentLimit;
         config.CurrentLimits.SupplyCurrentLowerLimit = HoodConstants.kHoodSupplyCurrentLowerLimit;
         config.CurrentLimits.SupplyCurrentLowerTime = HoodConstants.kHoodSupplyCurrentLowerTime;

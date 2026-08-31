@@ -29,17 +29,28 @@ public class Turret extends SubsystemBase{
 
     public Turret() {
         var config = new TalonFXConfiguration();
+        
+        // 1. 位置控制 PID 參數設定
         config.Slot0.kP = TurretConstants.kTurretkP; 
         config.Slot0.kI = TurretConstants.kTurretkI; 
         config.Slot0.kD = TurretConstants.kTurretkD; 
 
+        // 2. 啟用並設定左右軟體限位（正負 90 度對應的圈數，已乘上齒輪比）
+        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = TurretConstants.kTurretForwardSoftLimitEnable;
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = TurretConstants.kTurretForwardSoftLimitThreshold * TurretConstants.kTurretGearRatio;
+        config.SoftwareLimitSwitch.ReverseSoftLimitEnable = TurretConstants.kTurretReverseSoftLimitEnable;
+        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = TurretConstants.kTurretReverseSoftLimitThreshold * TurretConstants.kTurretGearRatio;
+
+        // 3. Motion Magic 運動軌跡控制參數設定（限制最大速度與最大加速度，防機構暴衝）
         config.MotionMagic.MotionMagicCruiseVelocity = TurretConstants.kTurretMotionMagicCruiseVelocity; 
         config.MotionMagic.MotionMagicAcceleration = TurretConstants.kTurretMotionMagicAcceleration;
         config.MotionMagic.MotionMagicJerk = TurretConstants.kTurretdMotionMagicJerk; 
 
-        config.CurrentLimits.StatorCurrentLimit = TurretConstants.kTurretSupplyCurrentLimit; 
+        // 4. 定子電流限制設定（Stator Current Limit）：防止物理卡死撞擊時燒毀馬達與損壞齒輪
+        config.CurrentLimits.StatorCurrentLimit = TurretConstants.kTurretStatorCurrentLimit; 
         config.CurrentLimits.StatorCurrentLimitEnable = TurretConstants.kTurretStatorCurrentLimitEnable;
 
+        // 5. 電源端電流限制設定（Supply Current Limit）：防止馬達瞬間抽電過大導致電池掉壓 (Brownout)
         config.CurrentLimits.SupplyCurrentLimit = TurretConstants.kTurretSupplyCurrentLimit;
         config.CurrentLimits.SupplyCurrentLowerLimit = TurretConstants.kTurretSupplyCurrentLowerLimit;
         config.CurrentLimits.SupplyCurrentLowerTime = TurretConstants.kTurretSupplyCurrentLowerTime;

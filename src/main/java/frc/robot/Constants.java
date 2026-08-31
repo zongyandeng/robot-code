@@ -57,7 +57,12 @@ public final class Constants {
         // 位置控制 PID 參數 (Position PID)
         public static final double kTurretkP = 12.0;            // 比例參數：控制轉塔旋轉到目標位置的反應速度與力道
         public static final double kTurretkI = 0.0;            // 積分參數：通常設為 0
-        public static final double kTurretkD = 0.1;             // 微分參數：防震，減緩接近目標位置時的煞車震動
+        public static final double kTurretkD = 0.1;  
+        
+        public static final boolean kTurretForwardSoftLimitEnable = true; // 是否啟用軟體極限開關，防止轉塔旋轉超過物理極限
+        public static final double kTurretForwardSoftLimitThreshold = 0.25; // 前端軟體極限閾值
+        public static final boolean kTurretReverseSoftLimitEnable = true; // 是否啟用軟體極限開關，防止轉塔旋轉超過物理極限
+        public static final double kTurretReverseSoftLimitThreshold = -0.25; // 後端軟體極限閾值
 
         // Motion Magic 運動軌跡控制參數 (用於平滑位置控制)
         public static final double kTurretMotionMagicCruiseVelocity = 10; // 巡航轉速 (RPS)：轉塔移動時的最大穩定轉速
@@ -95,7 +100,12 @@ public final class Constants {
         // 位置控制 PID 參數
         public static final double kHoodkP = 12.0;              // 比例參數：控制仰角反應的速度
         public static final double kHoodkI = 0.0;              // 積分參數
-        public static final double kHoodkD = 0.1;               // 微分參數
+        public static final double kHoodkD = 0.1; 
+        
+        public static final boolean kHoodForwardSoftLimitEnable = true; // 是否啟用軟體極限開關，防止仰角旋轉超過物理極限
+        public static final double kHoodForwardSoftLimitThreshold = 0.25; // 前端軟體極限閾值
+        public static final boolean kHoodReverseSoftLimitEnable = true; // 是否啟用軟體極限開關，防止仰角旋轉超過物理極限
+        public static final double kHoodReverseSoftLimitThreshold = 0.0; // 後端軟體極限
 
         // Motion Magic 運動軌跡控制參數
         public static final double kHoodMotionMagicCruiseVelocity = 10;  // 巡航轉速 (RPS)
@@ -133,7 +143,7 @@ public final class Constants {
         // 機構物理參數
         // 假設機構與馬達之間的齒輪比為 12:1 (馬達轉 12 圈，分球盤轉 1 圈)
         // 分球盤轉 60 度相當於 1/6 圈，因此馬達每次步進需要轉動 12 * (1.0 / 6.0) = 2.0 圈
-        public static final double kFeederRotationPerStep = 12.0 * (60.0 / 360.0); // 每次進料按鈕按下的目標步進圈數
+        public static final double kFeederRotationPerStep = 1.0 * (60.0 / 360.0); // 每次進料按鈕按下的目標步進圈數
 
         // 位置控制 PID 參數
         public static final double kFeederkP = 15.0;            // 比例參數：控制分球旋轉的精準度與反應速度
