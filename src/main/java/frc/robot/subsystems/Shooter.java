@@ -38,6 +38,8 @@ public class Shooter extends SubsystemBase{
     private TalonFXSimState m_bottomSimState;
     private FlywheelSim m_topFlywheelSim;
     private FlywheelSim m_bottomFlywheelSim;
+    private double m_topSimRPS;
+    private double m_bottomSimRPS;
 
     public Shooter() {
         var config = new TalonFXConfiguration();
@@ -135,8 +137,13 @@ public class Shooter extends SubsystemBase{
             // 3. 從物理模擬器獲取飛輪在受電壓與阻力影響後的實際轉速 (RPM)，並除以 60 轉換為每秒圈數 (RPS)
             double topSimRPS = m_topFlywheelSim.getAngularVelocityRPM() / 60.0;
             double bottomSimRPS = m_bottomFlywheelSim.getAngularVelocityRPM() / 60.0;
-            
-            // 4. 將模擬出的轉速寫回 TalonFX 的虛擬編碼器，使控制器的閉環回饋能讀取到這個速度
+
+            m_topSimRPS += topSimRPS * 0.02;
+            m_bottomSimRPS += bottomSimRPS * 0.02;
+
+            m_topSimState.setRawRotorPosition(m_topSimRPS);
+            m_bottomSimState.setRawRotorPosition(m_bottomSimRPS);
+
             m_topSimState.setRotorVelocity(topSimRPS);
             m_bottomSimState.setRotorVelocity(bottomSimRPS);
             

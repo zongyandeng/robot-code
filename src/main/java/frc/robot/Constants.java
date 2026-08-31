@@ -7,8 +7,8 @@ public final class Constants {
     // ==========================================
     public final class ShooterConstants {
         // 馬達 CAN ID 設定
-        public static final int kTopShooterId = 0;              // 上發射輪 TalonFX 馬達 CAN ID
-        public static final int kBottomShooterId = 0;           // 下發射輪 TalonFX 馬達 CAN ID
+        public static final int kTopShooterId = 51;              // 上發射輪 TalonFX 馬達 CAN ID
+        public static final int kBottomShooterId = 52;           // 下發射輪 TalonFX 馬達 CAN ID
         
         // 控制物件預設參數 (一般初始化為 0 即可)
         public static final double kShooterVelocityVoltage = 0; // 閉環速度控制控制器的初始化預設值
@@ -49,7 +49,7 @@ public final class Constants {
     // ==========================================
     public final class TurretConstants {
         // 馬達 CAN ID 設定
-        public static final int kTurretId = 0;                  // 轉塔 TalonFX 馬達 CAN ID
+        public static final int kTurretId = 53;                  // 轉塔 TalonFX 馬達 CAN ID
 
         // 控制物件預設參數
         public static final double kTurretMotionMagicVoltage = 0; // Motion Magic 控制器初始化預設值
@@ -92,7 +92,7 @@ public final class Constants {
     // ==========================================
     public final class HoodConstants {
         // 馬達 CAN ID 設定
-        public static final int kHoodId = 0;                    // 仰角調整 TalonFX 馬達 CAN ID
+        public static final int kHoodId = 54;                    // 仰角調整 TalonFX 馬達 CAN ID
 
         // 控制物件預設參數
         public static final double kHoodMotionMagicVoltage = 0;  // Motion Magic 控制器初始化預設值
@@ -135,7 +135,7 @@ public final class Constants {
     // ==========================================
     public final class FeederConstants {
         // 馬達 CAN ID 設定
-        public static final int kFeederId = 0;                  // 進料分球 TalonFX 馬達 CAN ID
+        public static final int kFeederId = 55;                  // 進料分球 TalonFX 馬達 CAN ID
 
         // 控制物件預設參數
         public static final double kFeederMotionMagicVoltage = 0; // Motion Magic 控制器初始化預設值
