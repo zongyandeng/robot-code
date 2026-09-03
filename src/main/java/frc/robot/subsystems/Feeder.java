@@ -29,6 +29,7 @@ public class Feeder extends SubsystemBase{
     //模擬專用變數
     private TalonFXSimState m_simState;
     private FlywheelSim m_FlywheelSim;
+    private double m_simRotorPosition = 0.0; // 用於模擬分球盤位置的變數    
 
     public Feeder() {
         var config = new TalonFXConfiguration();
@@ -111,8 +112,8 @@ public class Feeder extends SubsystemBase{
             m_simState.setRotorVelocity(motorVelRPS);
             
             // 4. 將速度對時間作積分，累加出馬達當前的虛擬位置並同步給編碼器
-            double currentPos = feeder_motor.getPosition().getValueAsDouble();
-            m_simState.setRawRotorPosition(currentPos + motorVelRPS * 0.020);
+            m_simRotorPosition += motorVelRPS * 0.02; // 0.02 秒為模擬週期
+            m_simState.setRawRotorPosition(m_simRotorPosition);
             
             // 5. 同步電池電壓給馬達
             m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());

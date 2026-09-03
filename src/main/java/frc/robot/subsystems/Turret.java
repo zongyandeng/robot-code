@@ -26,6 +26,8 @@ public class Turret extends SubsystemBase{
     private final TalonFX turret_motor = new TalonFX(TurretConstants.kTurretId);
     private final MotionMagicVoltage m_motionMagicVoltage = new MotionMagicVoltage(TurretConstants.kTurretMotionMagicVoltage);
 
+    private double m_targetPosition = 0.0; // 目標位置 (圈數)
+
     //模擬專用變數
     private TalonFXSimState m_simState;
     private SingleJointedArmSim m_turretSim;
@@ -44,8 +46,7 @@ public class Turret extends SubsystemBase{
         config.Slot0.kV = TurretConstants.kTurretkV;
         config.Slot0.kS = TurretConstants.kTurretkS;
 
-        // 2. 啟用並設定左右軟體限位（正負 90 度對應的圈數，已乘上齒輪比）
-        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = TurretConstants.kTurretForwardSoftLimitEnable;
+        // 2. 啟用並設定左右軟體限位（正負 90 度對應機構端 ±0.25 圈，已配置 SensorToMechanismRatio 故單位為機構端圈數）        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = TurretConstants.kTurretForwardSoftLimitEnable;
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = TurretConstants.kTurretForwardSoftLimitThreshold;
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = TurretConstants.kTurretReverseSoftLimitEnable;
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = TurretConstants.kTurretReverseSoftLimitThreshold;
@@ -53,7 +54,7 @@ public class Turret extends SubsystemBase{
         // 3. Motion Magic 運動軌跡控制參數設定（限制最大速度與最大加速度，防機構暴衝）
         config.MotionMagic.MotionMagicCruiseVelocity = TurretConstants.kTurretMotionMagicCruiseVelocity; 
         config.MotionMagic.MotionMagicAcceleration = TurretConstants.kTurretMotionMagicAcceleration;
-        config.MotionMagic.MotionMagicJerk = TurretConstants.kTurretdMotionMagicJerk; 
+        config.MotionMagic.MotionMagicJerk = TurretConstants.kTurretMotionMagicJerk; 
 
         // 4. 定子電流限制設定（Stator Current Limit）：防止物理卡死撞擊時燒毀馬達與損壞齒輪
         config.CurrentLimits.StatorCurrentLimit = TurretConstants.kTurretStatorCurrentLimit; 
@@ -95,12 +96,21 @@ public class Turret extends SubsystemBase{
      */
 
     public Command goToPositionCommand(double targetRotation) {
-        return this.run(() -> turret_motor.setControl(m_motionMagicVoltage.withPosition(targetRotation)));
+        return this.run(() -> {
+            m_targetPosition = targetRotation;
+            turret_motor.setControl(m_motionMagicVoltage.withPosition(m_targetPosition));
+        });
     }
-    
+    public boolean isAtTargetPosition() {
+        double currentPosition = turret_motor.getPosition().getValueAsDouble();
+        return Math.abs(currentPosition - m_targetPosition) < TurretConstants.kTurretPositionToleranceRotations;
+    }
+
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Turret/Position (Rotations)", turret_motor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Turret/Position (Degrees)", turret_motor.getPosition().getValueAsDouble() * 360.0);
+        SmartDashboard.putBoolean("Turret/At Target", isAtTargetPosition());
     }
     @Override
     public void simulationPeriodic() {

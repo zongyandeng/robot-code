@@ -66,6 +66,7 @@ public final class Constants {
         public static final double kTurretMotionMagicVoltage = 0; // Motion Magic 控制器初始化預設值
 
         public static final boolean kTurretMotorInverted = false; // 轉塔馬達是否反向旋轉 (視機構設計而定)
+        public static final double kTurretPositionToleranceRotations = 0.005; // 轉塔位置容忍度 (圈數，約 1.8 度)：判斷是否瞄準完成
 
         // 位置控制 PID 參數 (Position PID)
         public static final double kTurretkP = 20.0;            // 比例參數：控制轉塔旋轉到目標位置的反應速度與力道
@@ -82,7 +83,7 @@ public final class Constants {
         // Motion Magic 運動軌跡控制參數 (用於平滑位置控制)
         public static final double kTurretMotionMagicCruiseVelocity = 1.0; // 巡航轉速 (RPS)：轉塔移動時的最大穩定轉速
         public static final double kTurretMotionMagicAcceleration = 2.5;   // 最大加速度 (RPS/s)：轉塔加速到巡航轉速的快慢
-        public static final double kTurretdMotionMagicJerk = 0;          // 加加速度 (Jerk)：限制加速度變化的平滑度 (0 代表不限制)
+        public static final double kTurretMotionMagicJerk = 0;          // 加加速度 (Jerk)：限制加速度變化的平滑度 (0 代表不限制)
 
         // Stator Current Limit (定子限流)：防推撞或撞擊極限位置時毀壞機構
         public static final double kTurretStatorCurrentLimit = 40.0;        // 定子電流上限 (A)
@@ -164,15 +165,15 @@ public final class Constants {
         // 機構物理參數
         // 假設機構與馬達之間的齒輪比為 12:1 (馬達轉 12 圈，分球盤轉 1 圈)
         // 分球盤轉 60 度相當於 1/6 圈，因此馬達每次步進需要轉動 12 * (1.0 / 6.0) = 2.0 圈
-        public static final double kFeederRotationPerStep = kFeederGearRatio * (60.0 / 360.0); // 每次進料按鈕按下的目標步進圈數
-        public static final double kFeederPositionToleranceRotations = 0.05; // 分球機構位置容忍度 (圈數)：當分球盤位置與目標位置差距小於此值時，視為已達到目標位置
+        public static final double kFeederRotationPerStep = (60.0 / 360.0); // 每次進料按鈕按下的目標步進圈數
+        public static final double kFeederPositionToleranceRotations = 0.005; // 分球機構位置容忍度 (圈數)：當分球盤位置與目標位置差距小於此值時，視為已達到目標位置
 
         // 位置控制 PID 參數
         public static final double kFeederkP = 15.0;            // 比例參數：控制分球旋轉的精準度與反應速度
         public static final double kFeederkI = 0.0;            // 積分參數
         public static final double kFeederkD = 0.2;             // 微分參數
         public static final double kFeederkV = 0.2;            // 速度前饋：通常設為 0
-        public static final double kFeederkS = 0.12;            // �
+        public static final double kFeederkS = 0.12;            // 靜態前饋：用於克服摩擦力，通常設為 0
 
         // Motion Magic 運動軌跡控制參數
         public static final double kFeederMotionMagicCruiseVelocity = 15; // 巡航轉速 (RPS)

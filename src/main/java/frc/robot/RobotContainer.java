@@ -130,7 +130,7 @@ public class RobotContainer {
 
         joystick.rightBumper().onTrue(m_feeder.stepForCommand());
 
-        joystick.leftBumper().onTrue(m_feeder.reverseCommand());
+        joystick.leftTrigger().whileTrue(m_feeder.reverseCommand());
     }
 
     public Command getAutonomousCommand() {

@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
@@ -21,7 +20,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.system.LinearSystem;
 
 
-import frc.robot.Constants.ShooterConstants;;
+import frc.robot.Constants.ShooterConstants;
 
 public class Shooter extends SubsystemBase{
     private final TalonFX topShooter_motor = new TalonFX(ShooterConstants.kTopShooterId);
@@ -39,8 +38,8 @@ public class Shooter extends SubsystemBase{
     private TalonFXSimState m_bottomSimState;
     private FlywheelSim m_topFlywheelSim;
     private FlywheelSim m_bottomFlywheelSim;
-    private double m_topSimRPS;
-    private double m_bottomSimRPS;
+    private double m_topSimPosition;
+    private double m_bottomSimPosition;
 
     public Shooter() {
         var config = new TalonFXConfiguration();
@@ -91,7 +90,7 @@ public class Shooter extends SubsystemBase{
 
     public boolean isAtTargetVelocity() {
         if(m_topTargetRPS == 0.0 && m_bottomTargetRPS == 0.0){
-            return false; // 如果目標轉速為零，視為已達到目標
+            return false; //當目標轉速為 0 時，視為未達到目標速度，避免誤判
         }
         boolean topReady = Math.abs(getTopRPS() - m_topTargetRPS) <= ShooterConstants.kShooterVelocityToleranceRPS;
         boolean bottomReady = Math.abs(getBottomRPS() - m_bottomTargetRPS) <= ShooterConstants.kShooterVelocityToleranceRPS;
@@ -102,12 +101,19 @@ public class Shooter extends SubsystemBase{
     * 推薦：使用 PID 閉環速度控制的差速指令
     */
     public Command runShooterVelocityCommand(double baseRPS, double spinFactor){
-        return this.run(() -> {
+        return this.runEnd(() -> {
             m_topTargetRPS = baseRPS * (1.0 - spinFactor);
             m_bottomTargetRPS = baseRPS * (1.0 + spinFactor);
 
             topShooter_motor.setControl(m_velocityControl.withVelocity(m_topTargetRPS));
             bottomShooter_motor.setControl(m_velocityControl.withVelocity(m_bottomTargetRPS));
+        },
+        () -> {
+            //當命令結束時，將目標轉速重置為 0，並停止馬達
+            m_topTargetRPS = 0.0;
+            m_bottomTargetRPS = 0.0;
+            topShooter_motor.stopMotor();
+            bottomShooter_motor.stopMotor();
         });
     }
     
@@ -164,11 +170,11 @@ public class Shooter extends SubsystemBase{
             double topSimRPS = m_topFlywheelSim.getAngularVelocityRPM() / 60.0;
             double bottomSimRPS = m_bottomFlywheelSim.getAngularVelocityRPM() / 60.0;
 
-            m_topSimRPS += topSimRPS * 0.02;
-            m_bottomSimRPS += bottomSimRPS * 0.02;
+            m_topSimPosition += topSimRPS * 0.02; // 將速度對時間積分，累加出模擬位置
+            m_bottomSimPosition += bottomSimRPS * 0.02;
 
-            m_topSimState.setRawRotorPosition(m_topSimRPS);
-            m_bottomSimState.setRawRotorPosition(m_bottomSimRPS);
+            m_topSimState.setRawRotorPosition(m_topSimPosition);
+            m_bottomSimState.setRawRotorPosition(m_bottomSimPosition);
 
             m_topSimState.setRotorVelocity(topSimRPS);
             m_bottomSimState.setRotorVelocity(bottomSimRPS);
