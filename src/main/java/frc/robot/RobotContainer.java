@@ -127,6 +127,10 @@ public class RobotContainer {
 
         //按下十字鍵右 : 砲台偏向右側(例如0.1圈)
         joystick.povRight().onTrue(m_turret.goToPositionCommand(0.1));
+
+        joystick.rightBumper().onTrue(m_feeder.stepForCommand());
+
+        joystick.leftBumper().onTrue(m_feeder.reverseCommand());
     }
 
     public Command getAutonomousCommand() {

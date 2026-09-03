@@ -158,17 +158,21 @@ public final class Constants {
         public static final int kFeederId = 55;                  // 進料分球 TalonFX 馬達 CAN ID
 
         // 控制物件預設參數
+        public static final double kFeederGearRatio = 1.0;      // 分球機構與馬達的齒輪比 (假設為 12:1)
         public static final double kFeederMotionMagicVoltage = 0; // Motion Magic 控制器初始化預設值
 
         // 機構物理參數
         // 假設機構與馬達之間的齒輪比為 12:1 (馬達轉 12 圈，分球盤轉 1 圈)
         // 分球盤轉 60 度相當於 1/6 圈，因此馬達每次步進需要轉動 12 * (1.0 / 6.0) = 2.0 圈
-        public static final double kFeederRotationPerStep = 1.0 * (60.0 / 360.0); // 每次進料按鈕按下的目標步進圈數
+        public static final double kFeederRotationPerStep = kFeederGearRatio * (60.0 / 360.0); // 每次進料按鈕按下的目標步進圈數
+        public static final double kFeederPositionToleranceRotations = 0.05; // 分球機構位置容忍度 (圈數)：當分球盤位置與目標位置差距小於此值時，視為已達到目標位置
 
         // 位置控制 PID 參數
-        public static final double kFeederkP = 0.0;            // 比例參數：控制分球旋轉的精準度與反應速度
+        public static final double kFeederkP = 15.0;            // 比例參數：控制分球旋轉的精準度與反應速度
         public static final double kFeederkI = 0.0;            // 積分參數
-        public static final double kFeederkD = 0.0;             // 微分參數
+        public static final double kFeederkD = 0.2;             // 微分參數
+        public static final double kFeederkV = 0.2;            // 速度前饋：通常設為 0
+        public static final double kFeederkS = 0.12;            // �
 
         // Motion Magic 運動軌跡控制參數
         public static final double kFeederMotionMagicCruiseVelocity = 15; // 巡航轉速 (RPS)
@@ -186,7 +190,6 @@ public final class Constants {
         public static final boolean kFeederSupplyCurrentLimitEnable = true;  // 是否啟用電源限流
 
         // 分球機構物理參數 (用於模擬)
-        public static final double kFeederGearRatio = 1.0;      // 分球機構與馬達的齒輪比 (假設為 12:1)
         public static final double kFeederFlywheelMOI = 0.0005; // 分球機構的轉動慣量 (kg*m^2)，用於模擬
     }
 }
