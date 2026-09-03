@@ -20,6 +20,10 @@ import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 
+import frc.robot.Constants.ShooterConstants;
+import frc.robot.Constants.HoodConstants;
+
+
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
@@ -95,7 +99,7 @@ public class RobotContainer {
         // 當按住右板機 (Right Trigger) 時，以 60 RPS 基準速度、0.15 差速因子啟動發射器
         // 鬆開右板機時，呼叫停止發射器的命令
         joystick.rightTrigger().whileTrue(
-            m_shooter.runShooterVelocityCommand(60.0, 0.15)
+            m_shooter.runShooterVelocityCommand(ShooterConstants.kShooterDefaultRPS, ShooterConstants.kShooterDefaultSpinFactor)
         ).onFalse(
             m_shooter.stopShooterCommand()
         );
@@ -108,13 +112,15 @@ public class RobotContainer {
         );*/
 
         //按下 X 鍵瞬間，分球盤精確往前旋轉60度，走完自動結束
-        joystick.x().onTrue(m_feeder.stepForCommand());
+        joystick.x().and(m_shooter::isAtTargetVelocity)
+                    .and(m_hood::isAtTargetPosition)
+                    .onTrue(m_feeder.stepForCommand());
 
         //按下十字鍵上 : 仰角走到高位置(例如轉動0.1圈)
-        joystick.povUp().onTrue(m_hood.goToPositionCommand(0.1));
+        joystick.povUp().onTrue(m_hood.goToPositionCommand(HoodConstants.kHoodPresetHighGoalRotations));
 
         //按下十字鍵下 : 仰角降回初始位置 (0.0圈)
-        joystick.povDown().onTrue(m_hood.goToPositionCommand(0.0));
+        joystick.povDown().onTrue(m_hood.goToPositionCommand(HoodConstants.kHoodStowedPositionRotations));
 
         //按下十字鍵左 : 砲台偏向左側(例如0.1圈)
         joystick.povLeft().onTrue(m_turret.goToPositionCommand(-0.1));

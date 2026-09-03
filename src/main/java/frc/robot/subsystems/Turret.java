@@ -3,6 +3,9 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -30,16 +33,22 @@ public class Turret extends SubsystemBase{
     public Turret() {
         var config = new TalonFXConfiguration();
         
+        config.Feedback.SensorToMechanismRatio = TurretConstants.kTurretGearRatio; // 設定馬達編碼器與轉塔機構的齒輪比
+
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake; // 設定馬達空轉時為煞車模式 (Brake Mode)，防止轉塔自由旋轉
+        config.MotorOutput.Inverted = TurretConstants.kTurretMotorInverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive; // 設定馬達旋轉方向是否反向
         // 1. 位置控制 PID 參數設定
         config.Slot0.kP = TurretConstants.kTurretkP; 
         config.Slot0.kI = TurretConstants.kTurretkI; 
         config.Slot0.kD = TurretConstants.kTurretkD; 
+        config.Slot0.kV = TurretConstants.kTurretkV;
+        config.Slot0.kS = TurretConstants.kTurretkS;
 
         // 2. 啟用並設定左右軟體限位（正負 90 度對應的圈數，已乘上齒輪比）
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = TurretConstants.kTurretForwardSoftLimitEnable;
-        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = TurretConstants.kTurretForwardSoftLimitThreshold * TurretConstants.kTurretGearRatio;
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = TurretConstants.kTurretForwardSoftLimitThreshold;
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = TurretConstants.kTurretReverseSoftLimitEnable;
-        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = TurretConstants.kTurretReverseSoftLimitThreshold * TurretConstants.kTurretGearRatio;
+        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = TurretConstants.kTurretReverseSoftLimitThreshold;
 
         // 3. Motion Magic 運動軌跡控制參數設定（限制最大速度與最大加速度，防機構暴衝）
         config.MotionMagic.MotionMagicCruiseVelocity = TurretConstants.kTurretMotionMagicCruiseVelocity; 

@@ -4,6 +4,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -26,7 +27,7 @@ public class Shooter extends SubsystemBase{
     private final TalonFX topShooter_motor = new TalonFX(ShooterConstants.kTopShooterId);
     private final TalonFX bottomShooter_motor = new TalonFX(ShooterConstants.kBottomShooterId);
 
-    private final VelocityVoltage m_velocityControl = new VelocityVoltage(ShooterConstants.kShooterVelocityVoltage);
+    private final MotionMagicVelocityVoltage m_velocityControl = new MotionMagicVelocityVoltage(ShooterConstants.kShooterVelocityVoltage);
     private final DutyCycleOut m_dutyCycleControl = new DutyCycleOut(ShooterConstants.kShooterDutyCycleOut);
 
     //用於發佈到圖表的目標轉速追蹤變數
@@ -47,6 +48,11 @@ public class Shooter extends SubsystemBase{
         config.Slot0.kI = ShooterConstants.kShooterkI; 
         config.Slot0.kD = ShooterConstants.kShooterkD; 
         config.Slot0.kV = ShooterConstants.kShooterkV;  
+        config.Slot0.kS = ShooterConstants.kShooterkS;  
+
+        config.MotionMagic.MotionMagicCruiseVelocity = ShooterConstants.kShooterCruiseVelocity;
+        config.MotionMagic.MotionMagicAcceleration = ShooterConstants.kShooterAcceleration;
+        config.MotionMagic.MotionMagicJerk = ShooterConstants.kShooterJerk;
 
         config.CurrentLimits.StatorCurrentLimit = ShooterConstants.kShooterStatorCurrentLimit;
         config.CurrentLimits.StatorCurrentLimitEnable = ShooterConstants.kShooterStatorCurrentLimitEnable;
@@ -73,6 +79,23 @@ public class Shooter extends SubsystemBase{
             LinearSystem<N1, N1, N1> bottomFlywheelPlant = LinearSystemId.createFlywheelSystem(DCMotor.getKrakenX44(1), ShooterConstants.kBottomShooterFlywheelMOI, ShooterConstants.kBottomShooterGearRatio);
             m_bottomFlywheelSim = new FlywheelSim(bottomFlywheelPlant, DCMotor.getKrakenX44(1));
         }
+    }
+
+    public double getTopRPS(){
+        return topShooter_motor.getRotorVelocity().getValueAsDouble();
+    }
+
+    public double getBottomRPS(){
+        return bottomShooter_motor.getRotorVelocity().getValueAsDouble();
+    }
+
+    public boolean isAtTargetVelocity() {
+        if(m_topTargetRPS == 0.0 && m_bottomTargetRPS == 0.0){
+            return false; // 如果目標轉速為零，視為已達到目標
+        }
+        boolean topReady = Math.abs(getTopRPS() - m_topTargetRPS) <= ShooterConstants.kShooterVelocityToleranceRPS;
+        boolean bottomReady = Math.abs(getBottomRPS() - m_bottomTargetRPS) <= ShooterConstants.kShooterVelocityToleranceRPS;
+        return topReady && bottomReady;
     }
 
     /**
@@ -108,6 +131,8 @@ public class Shooter extends SubsystemBase{
     //新增的停止命令 (放開按鈕時呼叫)
     public Command stopShooterCommand(){
         return this.runOnce(() -> {
+        m_topTargetRPS = 0.0;
+        m_bottomTargetRPS = 0.0;
         topShooter_motor.stopMotor();
         bottomShooter_motor.stopMotor();
         });
@@ -120,6 +145,7 @@ public class Shooter extends SubsystemBase{
         SmartDashboard.putNumber("Shooter/Top Actual RPS", topShooter_motor.getRotorVelocity().getValueAsDouble());
         SmartDashboard.putNumber("Shooter/BottomTargetRPS", m_bottomTargetRPS);
         SmartDashboard.putNumber("Shooter/Bottom Actual RPS", bottomShooter_motor.getRotorVelocity().getValueAsDouble());
+        SmartDashboard.putBoolean("Shooter/At Target Velocity", isAtTargetVelocity());
     }
 
     @Override
