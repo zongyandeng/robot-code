@@ -46,7 +46,8 @@ public class Turret extends SubsystemBase{
         config.Slot0.kV = TurretConstants.kTurretkV;
         config.Slot0.kS = TurretConstants.kTurretkS;
 
-        // 2. 啟用並設定左右軟體限位（正負 90 度對應機構端 ±0.25 圈，已配置 SensorToMechanismRatio 故單位為機構端圈數）        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = TurretConstants.kTurretForwardSoftLimitEnable;
+        // 2. 啟用並設定左右軟體限位（正負 90 度對應機構端 ±0.25 圈，已配置 SensorToMechanismRatio 故單位為機構端圈數）        
+        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = TurretConstants.kTurretForwardSoftLimitEnable;
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = TurretConstants.kTurretForwardSoftLimitThreshold;
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = TurretConstants.kTurretReverseSoftLimitEnable;
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = TurretConstants.kTurretReverseSoftLimitThreshold;

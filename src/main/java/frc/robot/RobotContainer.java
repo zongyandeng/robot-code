@@ -114,6 +114,7 @@ public class RobotContainer {
         //按下 X 鍵瞬間，分球盤精確往前旋轉60度，走完自動結束
         joystick.x().and(m_shooter::isAtTargetVelocity)
                     .and(m_hood::isAtTargetPosition)
+                    .and(m_turret::isAtTargetPosition)
                     .onTrue(m_feeder.stepForCommand());
 
         //按下十字鍵上 : 仰角走到高位置(例如轉動0.1圈)
