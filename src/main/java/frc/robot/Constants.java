@@ -193,4 +193,49 @@ public final class Constants {
         // 分球機構物理參數 (用於模擬)
         public static final double kFeederFlywheelMOI = 0.0005; // 分球機構的轉動慣量 (kg*m^2)，用於模擬
     }
+
+    // ==========================================
+    // Orbit (導軌/輸送機構) 參數
+    // ==========================================
+    public final class OrbitConstants {
+        // 馬達 CAN ID 設定
+        public static final int kOrbitMotorID = 56;                  // Orbit TalonFX (Kraken X44) 馬達 CAN ID
+
+        // 控制物件預設參數
+        public static final double kOrbitGearRatio = 1.0;           // Orbit 與馬達的齒輪比 (若直接驅動則為 1:1)
+        public static final double kOrbitMotionMagicVoltage = 0;    // Motion Magic 控制器初始化預設值
+
+        public static final boolean kOrbitMotorInverted = false;    // Orbit 馬達是否反向旋轉 (視機構設計而定)
+
+        // 預設送球與反轉百分比 (DutyCycle)
+        public static final double kOrbitFeedDutyCycle = 0.7;        // 推進送球至 Shooter 的預設功率百分比
+        public static final double kOrbitReverseDutyCycle = -0.4;    // 卡球排障反轉時的預設功率百分比
+
+        // 位置與速度控制 PID 參數
+        public static final double kOrbitkP = 20.0;                 // 比例參數
+        public static final double kOrbitkI = 0.0;                  // 積分參數
+        public static final double kOrbitkD = 0.1;                  // 微分參數
+        public static final double kOrbitkV = 0.12;                 // 速度前饋
+        public static final double kOrbitkS = 0.1;                  // 靜態前饋 (克服摩擦力)
+
+        public static final double kOrbitPositionToleranceRotations = 0.01; // 位置容忍度 (圈數)
+
+        // Motion Magic 運動軌跡控制參數 (用於平滑位置控制)
+        public static final double kOrbitMotionMagicCruiseVelocity = 20.0; // 巡航轉速 (RPS)
+        public static final double kOrbitMotionMagicAcceleration = 40.0;   // 最大加速度 (RPS/s)
+        public static final double kOrbitMotionMagicJerk = 0.0;            // 加加速度 (Jerk)
+
+        // Stator Current Limit (定子限流)：保護馬達防止卡球堵轉燒毀
+        public static final double kOrbitStatorCurrentLimit = 40.0;        // 定子電流上限 (A)
+        public static final boolean kOrbitStatorCurrentLimitEnable = true; // 是否啟用定子限流
+
+        // Supply Current Limit (電源限流)：防止抽電過大導致電池掉壓
+        public static final double kOrbitSupplyCurrentLimit = 35.0;        // 主電流限制 (A)
+        public static final double kOrbitSupplyCurrentLowerLimit = 30.0;   // 次電流限制 (A)
+        public static final double kOrbitSupplyCurrentLowerTime = 1.0;     // 時間閥值 (秒)
+        public static final boolean kOrbitSupplyCurrentLimitEnable = true;  // 是否啟用電源限流
+
+        // 導軌物理參數 (用於模擬)
+        public static final double kOrbitFlywheelMOI = 0.0005;      // 導軌滾輪轉動慣量 (kg*m^2)
+    }
 }

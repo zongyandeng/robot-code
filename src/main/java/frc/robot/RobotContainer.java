@@ -17,6 +17,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Hood;
+import frc.robot.subsystems.Orbit;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 
@@ -45,6 +46,7 @@ public class RobotContainer {
     public final Turret m_turret = new Turret();
     public final Hood m_hood = new Hood();
     public final Feeder m_feeder = new Feeder();
+    public final Orbit m_orbit = new Orbit();
 
     public RobotContainer() {
         configureBindings();
@@ -111,27 +113,32 @@ public class RobotContainer {
             m_shooter.stopShooterCommand()
         );*/
 
-        //按下 X 鍵瞬間，分球盤精確往前旋轉60度，走完自動結束
+        // 按下 X 鍵瞬間（當射擊器轉速、仰角與轉塔均就緒時）：分球盤步進，且導軌同時向前推進送球至發射器
         joystick.x().and(m_shooter::isAtTargetVelocity)
                     .and(m_hood::isAtTargetPosition)
                     .and(m_turret::isAtTargetPosition)
-                    .onTrue(m_feeder.stepForCommand());
+                    .onTrue(m_feeder.stepForCommand().alongWith(m_orbit.feedCommand().withTimeout(0.8)));
 
-        //按下十字鍵上 : 仰角走到高位置(例如轉動0.1圈)
+        // 按住 Y 鍵：手動啟動導軌向前送球 (放開即停)
+        joystick.y().whileTrue(m_orbit.feedCommand());
+
+        // 按下十字鍵上 : 仰角走到高位置(例如轉動0.1圈)
         joystick.povUp().onTrue(m_hood.goToPositionCommand(HoodConstants.kHoodPresetHighGoalRotations));
 
-        //按下十字鍵下 : 仰角降回初始位置 (0.0圈)
+        // 按下十字鍵下 : 仰角降回初始位置 (0.0圈)
         joystick.povDown().onTrue(m_hood.goToPositionCommand(HoodConstants.kHoodStowedPositionRotations));
 
-        //按下十字鍵左 : 砲台偏向左側(例如0.1圈)
+        // 按下十字鍵左 : 砲台偏向左側(例如0.1圈)
         joystick.povLeft().onTrue(m_turret.goToPositionCommand(-0.1));
 
-        //按下十字鍵右 : 砲台偏向右側(例如0.1圈)
+        // 按下十字鍵右 : 砲台偏向右側(例如0.1圈)
         joystick.povRight().onTrue(m_turret.goToPositionCommand(0.1));
 
-        joystick.rightBumper().onTrue(m_feeder.stepForCommand());
+        // 按下右肩鍵 (Right Bumper)：手動單次分球，導軌同步送球 0.8 秒
+        joystick.rightBumper().onTrue(m_feeder.stepForCommand().alongWith(m_orbit.feedCommand().withTimeout(0.8)));
 
-        joystick.leftTrigger().whileTrue(m_feeder.reverseCommand());
+        // 按住左板機 (Left Trigger)：Feeder 分球盤與 Orbit 導軌同時反轉退球（排障防卡球）
+        joystick.leftTrigger().whileTrue(m_feeder.reverseCommand().alongWith(m_orbit.reverseCommand()));
     }
 
     public Command getAutonomousCommand() {
