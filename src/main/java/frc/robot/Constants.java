@@ -9,7 +9,11 @@ public final class Constants {
         // 馬達 CAN ID 設定
         public static final int kTopShooterId = 51;              // 上發射輪 TalonFX 馬達 CAN ID
         public static final int kBottomShooterId = 52;           // 下發射輪 TalonFX 馬達 CAN ID
-        
+
+        // 馬達轉向設定 (雙輪夾球發射時，上下輪旋轉方向通常相反)
+        public static final boolean kTopShooterInverted = false;    // 上發射輪是否反向 (預設 false: 逆時針正轉)
+        public static final boolean kBottomShooterInverted = true;  // 下發射輪是否反向 (預設 true: 順時針反轉)
+
         // 控制物件預設參數 (一般初始化為 0 即可)
         public static final double kShooterVelocityVoltage = 0; // 閉環速度控制控制器的初始化預設值
         public static final double kShooterDutyCycleOut = 0;    // 開環百分比控制控制器的初始化預設值

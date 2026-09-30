@@ -68,6 +68,10 @@ public class Turret extends SubsystemBase{
         config.CurrentLimits.SupplyCurrentLimitEnable = TurretConstants.kTurretSupplyCurrentLimitEnable;
 
         turret_motor.getConfigurator().apply(config);
+        turret_motor.setPosition(0.0); // 開電初始化自動將當前位置校準為 0 圈
+
+        // 在 SmartDashboard 提供一鍵歸零按鈕 (支援在 Disabled 狀態下推正機構後手動歸零)
+        SmartDashboard.putData("Turret/Zero Position", zeroPositionCommand().ignoringDisable(true));
 
         if (Robot.isSimulation()) {
             m_simState = turret_motor.getSimState();
@@ -92,10 +96,19 @@ public class Turret extends SubsystemBase{
     }
 
     /**
+     * 手動將當前轉塔位置重新校準歸零為 0 圈
+     */
+    public Command zeroPositionCommand() {
+        return this.runOnce(() -> {
+            turret_motor.setPosition(0.0);
+            m_targetPosition = 0.0;
+        });
+    }
+
+    /**
      * 讓砲台選轉到目標角度
      * @param targetRotation 目標轉圈數 (例如 : 轉1.5圈，配合齒輪比即為特定角度)
      */
-
     public Command goToPositionCommand(double targetRotation) {
         return this.run(() -> {
             m_targetPosition = targetRotation;

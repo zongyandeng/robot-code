@@ -67,6 +67,10 @@ public class Hood extends SubsystemBase {
         config.CurrentLimits.SupplyCurrentLimitEnable = HoodConstants.kHoodSupplyCurrentLimitEnable;
         
         hood_motor.getConfigurator().apply(config);
+        hood_motor.setPosition(0.0); // 開電初始化自動將當前位置校準為 0 圈 (收納位置)
+
+        // 在 SmartDashboard 提供一鍵歸零按鈕 (支援在 Disabled 狀態下推正機構後手動歸零)
+        SmartDashboard.putData("Hood/Zero Position", zeroPositionCommand().ignoringDisable(true));
 
         if (Robot.isSimulation()) {
             m_simState = hood_motor.getSimState();
@@ -88,6 +92,16 @@ public class Hood extends SubsystemBase {
                 0.0   // 初始角度
             );
         }   
+    }
+
+    /**
+     * 手動將當前仰角位置重新校準歸零為 0 圈 (收納位置)
+     */
+    public Command zeroPositionCommand() {
+        return this.runOnce(() -> {
+            hood_motor.setPosition(0.0);
+            m_targetPosition = 0.0;
+        });
     }
 
     /** 

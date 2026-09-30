@@ -4,6 +4,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -42,29 +43,43 @@ public class Shooter extends SubsystemBase{
     private double m_bottomSimPosition;
 
     public Shooter() {
-        var config = new TalonFXConfiguration();
-        config.Slot0.kP = ShooterConstants.kShooterkP;  
-        config.Slot0.kI = ShooterConstants.kShooterkI; 
-        config.Slot0.kD = ShooterConstants.kShooterkD; 
-        config.Slot0.kV = ShooterConstants.kShooterkV;  
-        config.Slot0.kS = ShooterConstants.kShooterkS;  
+        var topConfig = new TalonFXConfiguration();
+        topConfig.Slot0.kP = ShooterConstants.kShooterkP;  
+        topConfig.Slot0.kI = ShooterConstants.kShooterkI; 
+        topConfig.Slot0.kD = ShooterConstants.kShooterkD; 
+        topConfig.Slot0.kV = ShooterConstants.kShooterkV;  
+        topConfig.Slot0.kS = ShooterConstants.kShooterkS;  
 
-        config.MotionMagic.MotionMagicCruiseVelocity = ShooterConstants.kShooterCruiseVelocity;
-        config.MotionMagic.MotionMagicAcceleration = ShooterConstants.kShooterAcceleration;
-        config.MotionMagic.MotionMagicJerk = ShooterConstants.kShooterJerk;
+        topConfig.MotionMagic.MotionMagicCruiseVelocity = ShooterConstants.kShooterCruiseVelocity;
+        topConfig.MotionMagic.MotionMagicAcceleration = ShooterConstants.kShooterAcceleration;
+        topConfig.MotionMagic.MotionMagicJerk = ShooterConstants.kShooterJerk;
 
-        config.CurrentLimits.StatorCurrentLimit = ShooterConstants.kShooterStatorCurrentLimit;
-        config.CurrentLimits.StatorCurrentLimitEnable = ShooterConstants.kShooterStatorCurrentLimitEnable;
+        topConfig.CurrentLimits.StatorCurrentLimit = ShooterConstants.kShooterStatorCurrentLimit;
+        topConfig.CurrentLimits.StatorCurrentLimitEnable = ShooterConstants.kShooterStatorCurrentLimitEnable;
 
-        config.CurrentLimits.SupplyCurrentLimit = ShooterConstants.kShooterSupplyCurrentLimit;
-        config.CurrentLimits.SupplyCurrentLowerLimit = ShooterConstants.kShooterSupplyCurrentLowerLimit;
-        config.CurrentLimits.SupplyCurrentLowerTime = ShooterConstants.kShooterSupplyCurrentLowerTime;
-        config.CurrentLimits.SupplyCurrentLimitEnable = ShooterConstants.kShooterSupplyCurrentLimitEnable;
+        topConfig.CurrentLimits.SupplyCurrentLimit = ShooterConstants.kShooterSupplyCurrentLimit;
+        topConfig.CurrentLimits.SupplyCurrentLowerLimit = ShooterConstants.kShooterSupplyCurrentLowerLimit;
+        topConfig.CurrentLimits.SupplyCurrentLowerTime = ShooterConstants.kShooterSupplyCurrentLowerTime;
+        topConfig.CurrentLimits.SupplyCurrentLimitEnable = ShooterConstants.kShooterSupplyCurrentLimitEnable;
 
-        config.ClosedLoopRamps.VoltageClosedLoopRampPeriod = ShooterConstants.kShooterVoltageClosedLoopRampPeriod;
+        topConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = ShooterConstants.kShooterVoltageClosedLoopRampPeriod;
 
-        topShooter_motor.getConfigurator().apply(config);
-        bottomShooter_motor.getConfigurator().apply(config);
+        // 設定上發射輪馬達轉向並套用配置
+        topConfig.MotorOutput.Inverted = ShooterConstants.kTopShooterInverted 
+            ? InvertedValue.Clockwise_Positive 
+            : InvertedValue.CounterClockwise_Positive;
+        topShooter_motor.getConfigurator().apply(topConfig);
+
+        // 下發射輪複製相同控制參數，套用反向設定 (面對面夾球發射)
+        var bottomConfig = new TalonFXConfiguration();
+        bottomConfig.Slot0 = topConfig.Slot0;
+        bottomConfig.MotionMagic = topConfig.MotionMagic;
+        bottomConfig.CurrentLimits = topConfig.CurrentLimits;
+        bottomConfig.ClosedLoopRamps = topConfig.ClosedLoopRamps;
+        bottomConfig.MotorOutput.Inverted = ShooterConstants.kBottomShooterInverted 
+            ? InvertedValue.Clockwise_Positive 
+            : InvertedValue.CounterClockwise_Positive;
+        bottomShooter_motor.getConfigurator().apply(bottomConfig);
 
         //僅在模擬環境下初始化物理模擬器
         if(Robot.isSimulation()){

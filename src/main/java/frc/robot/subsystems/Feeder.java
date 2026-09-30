@@ -75,10 +75,11 @@ public class Feeder extends SubsystemBase{
             double currentPos = feeder_motor.getPosition().getValueAsDouble();
             //2.計算目標位置 = 當前位置 + 增量
             double targetPos = (Math.round(currentPos / kRotationsPerStep) + 1.0) * kRotationsPerStep; // 先將當前位置除以步進圈數，四捨五入取整數，再加 1，最後乘回步進圈數，得到下一個目標位置
-            //3.執行指令 : 走到目標位置
+            //3.執行指令 : 走到目標位置 (加入 1.0 秒安全逾時，避免微小誤差或卡球導致指令永不結束)
             return this.run(() -> feeder_motor.setControl(m_motionMagicVoltage.withPosition(targetPos)))
                 //當馬達非常接近目標時(誤差小於容忍度)，就判定此動作已完成並結束指令
-                .until(() -> Math.abs(feeder_motor.getPosition().getValueAsDouble() - targetPos) < FeederConstants.kFeederPositionToleranceRotations);
+                .until(() -> Math.abs(feeder_motor.getPosition().getValueAsDouble() - targetPos) < FeederConstants.kFeederPositionToleranceRotations)
+                .withTimeout(1.0);
         });
     }
 

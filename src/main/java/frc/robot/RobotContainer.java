@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -31,7 +32,7 @@ public class RobotContainer {
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // 新增 10% 死區限制
+            .withDeadband(0.0).withRotationalDeadband(0.0) // 死區已在搖桿輸入端統一先處理，此處設為 0 避免雙重非線性阻尼
             .withDriveRequestType(DriveRequestType.Velocity); // 改用閉環速度控制模式，在阻力下維持穩定速度
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
@@ -58,12 +59,12 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() -> {
-                //讀取搖桿輸入(WPIlib中，向前為-Y，向左為-X，逆時針旋轉為-RightX)
-                double xInput = -joystick.getLeftY();
-                double yInput = -joystick.getLeftX();
-                double rightX = -joystick.getRightX();
-                //套用平方曲線以改善低速微調手感
-                //copySign的作用是保留原本的前後左右方向(正負號)
+                // 讀取搖桿輸入並先進行 10% 死區過濾 (WPILib慣例: 向前為 -Y, 向左為 -X, 逆時針旋轉為 -RightX)
+                double xInput = MathUtil.applyDeadband(-joystick.getLeftY(), 0.1);
+                double yInput = MathUtil.applyDeadband(-joystick.getLeftX(), 0.1);
+                double rightX = MathUtil.applyDeadband(-joystick.getRightX(), 0.1);
+
+                // 套用平方曲線以改善低速微調手感 (保留原本正負號)
                 double xspeed = Math.copySign(xInput * xInput, xInput) * MaxSpeed;
                 double yspeed = Math.copySign(yInput * yInput, yInput) * MaxSpeed;
                 double rotRate = Math.copySign(rightX * rightX, rightX) * MaxAngularRate;
@@ -86,12 +87,14 @@ public class RobotContainer {
             point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
         ));
 
-        // Run SysId routines when holding back/start and X/Y.
-        // Note that each routine should be run exactly once in a single log.
+        // 【隔離 SysId 測試指令】避免與日常 X/Y 送球射擊功能衝突，並防止場上誤觸導致底盤暴衝
+        // 若需要進行底盤系統辨識 (SysId Characterization)，請暫時解除註解並在安全開闊場地測試：
+        /*
         joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
         joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
         joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        */
 
         // Reset the field-centric heading on left bumper press.
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
