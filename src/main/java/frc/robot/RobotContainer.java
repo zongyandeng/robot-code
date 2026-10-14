@@ -21,9 +21,12 @@ import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Orbit;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.Vision;
+import frc.robot.commands.AutoShoot;
 
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.HoodConstants;
+import frc.robot.Constants.AutoConstants;
 
 
 public class RobotContainer {
@@ -48,6 +51,7 @@ public class RobotContainer {
     public final Hood m_hood = new Hood();
     public final Feeder m_feeder = new Feeder();
     public final Orbit m_orbit = new Orbit();
+    public final Vision m_vision = new Vision();
 
     public RobotContainer() {
         configureBindings();
@@ -142,24 +146,21 @@ public class RobotContainer {
 
         // 按住左板機 (Left Trigger)：Feeder 分球盤與 Orbit 導軌同時反轉退球（排障防卡球）
         joystick.leftTrigger().whileTrue(m_feeder.reverseCommand().alongWith(m_orbit.reverseCommand()));
+
+        // 按下 Start 鍵：啟動視覺自主射擊（等同比賽前 60 秒的 AI 自主流程），最長 60 秒
+        // 不依賴 Driver Station 的 Autonomous 模式，Teleop 模式下也能用。按 Back 鍵中止（排程一個佔用同樣機構的空指令，會取消正在跑的射擊流程）
+        joystick.start().onTrue(autoShootCommand());
+        joystick.back().onTrue(Commands.runOnce(() -> {}, m_turret, m_hood, m_shooter, m_feeder, m_orbit));
+    }
+
+    /** 視覺自主射擊流程，限時 AutoConstants.kAutoDurationSec 秒。 */
+    private Command autoShootCommand() {
+        return AutoShoot.routine(m_vision, m_turret, m_hood, m_shooter, m_feeder, m_orbit)
+                .withTimeout(AutoConstants.kAutoDurationSec);
     }
 
     public Command getAutonomousCommand() {
-        // Simple drive forward auton
-        final var idle = new SwerveRequest.Idle();
-        return Commands.sequence(
-            // Reset our field centric heading to match the robot
-            // facing away from our alliance station wall (0 deg).
-            drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
-            // Then slowly drive forward (away from us) for 5 seconds.
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(0.5)
-                    .withVelocityY(0)
-                    .withRotationalRate(0)
-            )
-            .withTimeout(5.0),
-            // Finally idle for the rest of auton
-            drivetrain.applyRequest(() -> idle)
-        );
+        // 機器人在起始框內定點，不移動底盤，直接用視覺瞄準並射擊
+        return autoShootCommand();
     }
 }

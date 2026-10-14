@@ -242,4 +242,53 @@ public final class Constants {
         // 導軌物理參數 (用於模擬)
         public static final double kOrbitFlywheelMOI = 0.0005;      // 導軌滾輪轉動慣量 (kg*m^2)
     }
+
+    // ==========================================
+    // Vision (Orin Nano 視覺，透過 NetworkTables "Vision" 表傳來)
+    // 孔的編號 index = row * 3 + col；row 0 = 最上排 3 個小孔，row 1~3 = 大孔三排，col 0~2 = 由左到右
+    // ==========================================
+    public final class VisionConstants {
+        public static final String kTableName = "Vision";
+
+        public static final int kHoleCount = 12;
+        public static final int kFirstBigHoleIndex = 3;      // index 0~2 為小孔，3~11 為大孔
+
+        // 資料新鮮度與平均
+        public static final double kFrameStaleSec = 0.5;     // 超過這麼久沒有新的一幀，視為視覺斷線
+        public static final double kAverageWindowSec = 0.6;  // 取最近這段時間內的幀，用中位數降低雜訊
+        public static final int kMinSamples = 3;             // 窗口內至少要有幾幀有效資料才採用
+        public static final int kBufferSize = 40;            // 最多保留幾幀
+
+        // 相機（裝在底盤上，面向前方）相對於「轉塔旋轉軸」的位置，單位公尺。前為正、左為正。
+        // 量不出來先用 0，距離 2.5 m 時 10 cm 的偏移約造成 2 度誤差。
+        public static final double kCameraForwardOfTurretMeters = 0.0;
+        public static final double kCameraLeftOfTurretMeters = 0.0;
+
+        // 轉塔角度換算：
+        //   視覺算出「目標相對轉塔軸、往右為正的角度」(度)，轉成轉塔馬達的圈數：
+        //   turretRot = kTurretDirection * 角度 / 360 + kTurretZeroOffsetRot
+        // kTurretDirection：轉塔馬達正轉時，砲口是往右轉填 +1，往左轉填 -1（務必實測確認，這是最容易接反的地方）
+        public static final double kTurretDirection = 1.0;
+        public static final double kTurretZeroOffsetRot = 0.0; // 砲口正對車頭時的轉塔讀數
+        public static final double kTurretSafeLimitRot = 0.24; // 比軟體極限 0.25 再保守一點
+    }
+
+    // ==========================================
+    // Auto (前 60 秒 AI 自主射擊流程)
+    // ==========================================
+    public final class AutoConstants {
+        public static final double kAutoDurationSec = 60.0;      // 規則：開始後前 60 秒須為 AI 自主
+        public static final int kMaxBalls = 27;                  // 上半場每隊 27 顆
+
+        public static final int kShotsAtLitSmallHole = 3;        // 亮燈小孔每顆 4 分，最多 3 顆
+        public static final int kShotsPerBigHole = 3;            // 大孔每個最多算 3 顆（每顆 2 分）
+        // 大孔的射擊順序（index 3~11）。27 顆球扣掉亮燈孔的 3 顆，剩 24 顆，最後一個大孔會因球數用完而略過。
+        public static final int[] kBigHoleOrder = {7, 6, 8, 4, 3, 5, 10, 9, 11};
+
+        public static final double kPrepWaitSec = 0.2;           // 設定新目標後，先等這麼久才檢查「到位」，避免讀到上一個目標的舊狀態
+        public static final double kReadyTimeoutSec = 3.0;       // 等待轉塔/仰角/轉速到位的上限
+        public static final double kFeedSec = 0.8;               // 每發 Orbit 送球時間（與手動一致）
+        public static final double kCooldownSec = 0.3;           // 每發之間的間隔
+        public static final double kWaitForVisionSec = 5.0;      // 開局等視覺上線的上限
+    }
 }
