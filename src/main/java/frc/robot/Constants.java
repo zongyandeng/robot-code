@@ -51,11 +51,6 @@ public final class Constants {
         // 電壓閉環斜率 (Voltage Ramp Rate)
         public static final double kShooterVoltageClosedLoopRampPeriod = 0.25; // 電壓從 0V 升到 12V 最快所需的秒數，能平滑加速、保護機構
 
-        // 發射輪物理參數 (用於模擬)
-        public static final double kTopShooterGearRatio = 1.0;      // 發射輪與馬達的齒輪比 (假設為 1:1)
-        public static final double kTopShooterFlywheelMOI = 0.0005; // 上發射輪的轉動慣量 (kg*m^2)，用於模擬
-        public static final double kBottomShooterGearRatio = 1.0;   // 下發射輪與馬達的齒輪比 (假設為 1:1)
-        public static final double kBottomShooterFlywheelMOI = 0.0005; // 下發射輪的轉動慣量 (kg*m^2)，用於模擬
     }
 
     // ==========================================
@@ -99,11 +94,6 @@ public final class Constants {
         public static final double kTurretSupplyCurrentLowerTime = 1.0;     // 時間閥值 (秒)
         public static final boolean kTurretSupplyCurrentLimitEnable = true;  // 是否啟用電源端電流限制
 
-        // 轉塔物理參數 (用於模擬)
-        public static final double kTurretFlywheelMOI = 0.0005; // 轉塔的轉動慣量 (kg*m^2)，用於模擬
-        public static final double kTurretArmLengthMeters = 0.3; // 轉塔旋轉半徑 (公尺)
-        public static final double kTurretMaxAngleRads = Math.PI;     // 轉塔最大旋轉角度 (度)
-        public static final double kTurretMinAngleRads = -Math.PI;      // 轉塔最小旋轉角度 (度)
     }
 
     // ==========================================
@@ -148,11 +138,6 @@ public final class Constants {
         public static final double kHoodSupplyCurrentLowerTime = 0.5;     // 時間閥值 (秒)
         public static final boolean kHoodSupplyCurrentLimitEnable = true;  // 是否啟用電源限制
 
-        // 仰角物理參數 (用於模擬)
-        public static final double kHoodFlywheelMOI = 0.0005; // 仰角的轉動慣量 (kg*m^2)，用於模擬
-        public static final double kHoodArmLengthMeters = 0.3; // 仰角面板的長度/半徑 (公尺)
-        public static final double kHoodMaxAngleRads = Math.toRadians(72);     // 仰角最大旋轉角度 (弧度)
-        public static final double kHoodMinAngleRads = Math.toRadians(0);      // 仰角最小旋轉角度 (弧度)
     }
 
     // ==========================================
@@ -194,8 +179,6 @@ public final class Constants {
         public static final double kFeederSupplyCurrentLowerTime = 1.0;     // 時間閥值 (秒)
         public static final boolean kFeederSupplyCurrentLimitEnable = true;  // 是否啟用電源限流
 
-        // 分球機構物理參數 (用於模擬)
-        public static final double kFeederFlywheelMOI = 0.0005; // 分球機構的轉動慣量 (kg*m^2)，用於模擬
     }
 
     // ==========================================
@@ -239,8 +222,6 @@ public final class Constants {
         public static final double kOrbitSupplyCurrentLowerTime = 1.0;     // 時間閥值 (秒)
         public static final boolean kOrbitSupplyCurrentLimitEnable = true;  // 是否啟用電源限流
 
-        // 導軌物理參數 (用於模擬)
-        public static final double kOrbitFlywheelMOI = 0.0005;      // 導軌滾輪轉動慣量 (kg*m^2)
     }
 
     // ==========================================

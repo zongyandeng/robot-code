@@ -6,20 +6,12 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants.OrbitConstants;
-import frc.robot.Robot;
 
 public class Orbit extends SubsystemBase {
     // 導軌傳送馬達 (Kraken X44)
@@ -30,11 +22,6 @@ public class Orbit extends SubsystemBase {
     private final MotionMagicVoltage m_motionMagicVoltage = new MotionMagicVoltage(OrbitConstants.kOrbitMotionMagicVoltage);
 
     private double m_targetPosition = 0.0;
-
-    // 模擬專用變數
-    private TalonFXSimState m_simState;
-    private FlywheelSim m_orbitSim;
-    private double m_simPosition = 0.0;
 
     public Orbit() {
         var config = new TalonFXConfiguration();
@@ -70,17 +57,6 @@ public class Orbit extends SubsystemBase {
 
         orbit_motor.getConfigurator().apply(config);
 
-        // 僅在桌面模擬模式下初始化物理模擬器
-        if (Robot.isSimulation()) {
-            m_simState = orbit_motor.getSimState();
-            // 建立導軌滾輪系統物理模型 (狀態空間表示法，Kraken X44 單馬達)
-            LinearSystem<N1, N1, N1> orbitPlant = LinearSystemId.createFlywheelSystem(
-                DCMotor.getKrakenX44(1),
-                OrbitConstants.kOrbitFlywheelMOI,
-                OrbitConstants.kOrbitGearRatio
-            );
-            m_orbitSim = new FlywheelSim(orbitPlant, DCMotor.getKrakenX44(1));
-        }
     }
 
     /**
@@ -142,26 +118,4 @@ public class Orbit extends SubsystemBase {
         SmartDashboard.putNumber("Orbit/Current (A)", orbit_motor.getStatorCurrent().getValueAsDouble());
     }
 
-    @Override
-    public void simulationPeriodic() {
-        if (Robot.isSimulation()) {
-            // 1. 讀取馬達驅動電壓傳入物理模擬器
-            m_orbitSim.setInputVoltage(m_simState.getMotorVoltage());
-            m_orbitSim.update(0.020);
-
-            // 2. 獲取導軌軸的模擬轉速 (RPS)
-            double simRPS = m_orbitSim.getAngularVelocityRPM() / 60.0;
-
-            // 3. 乘上齒輪比得到轉子端轉速
-            double motorVelRPS = simRPS * OrbitConstants.kOrbitGearRatio;
-            m_simState.setRotorVelocity(motorVelRPS);
-
-            // 4. 速度積分累積為虛擬位置
-            m_simPosition += motorVelRPS * 0.020;
-            m_simState.setRawRotorPosition(m_simPosition);
-
-            // 5. 同步虛擬電池電壓
-            m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());
-        }
-    }
 }

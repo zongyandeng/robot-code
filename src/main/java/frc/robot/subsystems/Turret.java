@@ -9,28 +9,15 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.RobotController;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import frc.robot.Constants.TurretConstants;
-import frc.robot.Robot;
 
 public class Turret extends SubsystemBase{
     private final TalonFX turret_motor = new TalonFX(TurretConstants.kTurretId);
     private final MotionMagicVoltage m_motionMagicVoltage = new MotionMagicVoltage(TurretConstants.kTurretMotionMagicVoltage);
 
     private double m_targetPosition = 0.0; // 目標位置 (圈數)
-
-    //模擬專用變數
-    private TalonFXSimState m_simState;
-    private SingleJointedArmSim m_turretSim;
 
     public Turret() {
         var config = new TalonFXConfiguration();
@@ -73,26 +60,6 @@ public class Turret extends SubsystemBase{
         // 在 SmartDashboard 提供一鍵歸零按鈕 (支援在 Disabled 狀態下推正機構後手動歸零)
         SmartDashboard.putData("Turret/Zero Position", zeroPositionCommand().ignoringDisable(true));
 
-        if (Robot.isSimulation()) {
-            m_simState = turret_motor.getSimState();
-            // 建立轉塔的物理模型 (二階狀態空間系統：角度與角速度，維度為 N2)
-            LinearSystem<N2, N1, N2> turretPlant = LinearSystemId.createSingleJointedArmSystem(
-                DCMotor.getKrakenX44(1), 
-                TurretConstants.kTurretFlywheelMOI, 
-                TurretConstants.kTurretGearRatio
-            );
-            // 建立單關節懸臂模擬器
-            m_turretSim = new SingleJointedArmSim(
-                turretPlant,
-                DCMotor.getKrakenX44(1),
-                TurretConstants.kTurretGearRatio,
-                TurretConstants.kTurretArmLengthMeters,
-                TurretConstants.kTurretMinAngleRads,
-                TurretConstants.kTurretMaxAngleRads,
-                false, // 水平旋轉，故設為 false (不考慮重力效應)
-                0.0    // 初始角度
-            );
-        }
     }
 
     /**
@@ -125,28 +92,5 @@ public class Turret extends SubsystemBase{
         SmartDashboard.putNumber("Turret/Position (Rotations)", turret_motor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Turret/Position (Degrees)", turret_motor.getPosition().getValueAsDouble() * 360.0);
         SmartDashboard.putBoolean("Turret/At Target", isAtTargetPosition());
-    }
-    @Override
-    public void simulationPeriodic() {
-        if (Robot.isSimulation()) {
-            // 1. 讀取馬達驅動電壓輸入給轉臂模擬器
-            m_turretSim.setInputVoltage(m_simState.getMotorVoltage());
-            m_turretSim.update(0.020);
-            
-            // 2. 獲取模擬器計算出的物理角度 (Rads) 與角速度 (Rad/Sec)
-            double simPosRads = m_turretSim.getAngleRads();
-            double simVelRadsPerSec = m_turretSim.getVelocityRadPerSec();
-            
-            // 3. 轉換單位 (弧度 -> 圈數) 並且乘以齒輪比，得到馬達轉子 (Rotor) 端的數據
-            double motorPosRotations = (simPosRads / (2.0 * Math.PI)) * TurretConstants.kTurretGearRatio;
-            double motorVelRPS = (simVelRadsPerSec / (2.0 * Math.PI)) * TurretConstants.kTurretGearRatio;
-            
-            // 4. 將數值同步給馬達的虛擬編碼器
-            m_simState.setRawRotorPosition(motorPosRotations);
-            m_simState.setRotorVelocity(motorVelRPS);
-            
-            // 5. 同步虛擬電池電壓
-            m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());
-        }
     }    
 }

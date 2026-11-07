@@ -84,6 +84,4 @@ public class Robot extends TimedRobot {
     @Override
     public void testExit() {}
 
-    @Override
-    public void simulationPeriodic() {}
 }

@@ -8,16 +8,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import frc.robot.Robot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-import edu.wpi.first.wpilibj.RobotController;
-import com.ctre.phoenix6.sim.TalonFXSimState;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 
 import frc.robot.Constants.HoodConstants;
 
@@ -28,9 +19,6 @@ public class Hood extends SubsystemBase {
     private final MotionMagicVoltage m_motionMagicVoltage = new MotionMagicVoltage(HoodConstants.kHoodMotionMagicVoltage);
 
     private double m_targetPosition = HoodConstants.kHoodStowedPositionRotations; // 目標位置 (圈數)
-
-    private TalonFXSimState m_simState;
-    private SingleJointedArmSim m_hoodSim;
 
     public Hood() {
         var config = new TalonFXConfiguration();
@@ -71,27 +59,7 @@ public class Hood extends SubsystemBase {
 
         // 在 SmartDashboard 提供一鍵歸零按鈕 (支援在 Disabled 狀態下推正機構後手動歸零)
         SmartDashboard.putData("Hood/Zero Position", zeroPositionCommand().ignoringDisable(true));
-
-        if (Robot.isSimulation()) {
-            m_simState = hood_motor.getSimState();
-            // 建立仰角調整面板的物理模型 (二階狀態空間系統，考慮仰角慣性)
-            LinearSystem<N2, N1, N2> hoodPlant = LinearSystemId.createSingleJointedArmSystem(
-                DCMotor.getKrakenX44(1), 
-                HoodConstants.kHoodFlywheelMOI, 
-                HoodConstants.kHoodGearRatio
-            );
-            // 建立單關節懸臂模擬器
-            m_hoodSim = new SingleJointedArmSim(
-                hoodPlant,
-                DCMotor.getKrakenX44(1),
-                HoodConstants.kHoodGearRatio,
-                HoodConstants.kHoodArmLengthMeters,
-                HoodConstants.kHoodMinAngleRads,
-                HoodConstants.kHoodMaxAngleRads,
-                true, // 砲面板垂直擺動會受重力引力下墜，故設為 true (考慮重力效應)
-                0.0   // 初始角度
-            );
-        }   
+   
     }
 
     /**
@@ -127,28 +95,5 @@ public class Hood extends SubsystemBase {
         SmartDashboard.putNumber("Hood/Position (Rotations)", currentRot);
         SmartDashboard.putNumber("Hood/Position (Degrees)", currentRot * 360.0);
         SmartDashboard.putBoolean("Hood/At Target", isAtTargetPosition());
-    }
-    @Override
-    public void simulationPeriodic() {
-        if (Robot.isSimulation()) {
-            // 1. 讀取驅動電壓並更新模擬器物理狀態
-            m_hoodSim.setInputVoltage(m_simState.getMotorVoltage());
-            m_hoodSim.update(0.020);
-            
-            // 2. 獲取物理角度 (Rads) 與速度 (Rad/Sec)
-            double simPosRads = m_hoodSim.getAngleRads();
-            double simVelRadsPerSec = m_hoodSim.getVelocityRadPerSec();
-            
-            // 3. 轉換為馬達轉子 (Rotor) 端的位置與速度 (乘以齒輪比)
-            double motorPosRotations = (simPosRads / (2.0 * Math.PI)) * HoodConstants.kHoodGearRatio;
-            double motorVelRPS = (simVelRadsPerSec / (2.0 * Math.PI)) * HoodConstants.kHoodGearRatio;
-            
-            // 4. 同步至馬達的虛擬編碼器
-            m_simState.setRawRotorPosition(motorPosRotations);
-            m_simState.setRotorVelocity(motorVelRPS);
-            
-            // 5. 同步虛擬電池電壓
-            m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());
-        }
     }    
 }
