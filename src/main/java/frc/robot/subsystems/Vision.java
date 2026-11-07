@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.BooleanSubscriber;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.IntegerSubscriber;
@@ -38,16 +39,40 @@ public class Vision extends SubsystemBase {
     private final DoubleArraySubscriber m_dist = m_table.getDoubleArrayTopic("dist_m").subscribe(new double[0]);
     private final DoubleArraySubscriber m_height = m_table.getDoubleArrayTopic("height_m").subscribe(new double[0]);
 
+    // roboRIO -> Orin 的開關：false 時 Orin 不拍照、不跑辨識（vision_node.py 訂閱 Vision/enable）
+    private final BooleanPublisher m_enablePub = m_table.getBooleanTopic("enable").publish();
+
     private final ArrayDeque<Frame> m_frames = new ArrayDeque<>();
     private long m_lastFrameId = -1;
     private double m_lastFrameTime = Double.NEGATIVE_INFINITY;
     private boolean m_lastGridOk = false;
+    private boolean m_cameraEnabled = true;
+
+    public Vision() {
+        m_enablePub.set(true);
+    }
+
+    /**
+     * 開關 Orin 的拍照與辨識。關閉時丟掉所有舊資料；重新開啟後要等到 Orin 送來「新的」一幀才算視覺上線
+     * （isConnected() 會先回 false），不會讀到開關之前的舊結果。
+     */
+    public void setCameraEnabled(boolean enabled) {
+        m_cameraEnabled = enabled;
+        m_enablePub.set(enabled);
+        m_frames.clear();
+        m_lastFrameTime = Double.NEGATIVE_INFINITY;
+        m_lastFrameId = m_frameId.get(); // 以目前的 frame_id 為基準，只接受之後才出現的新幀
+    }
+
+    public boolean isCameraEnabled() {
+        return m_cameraEnabled;
+    }
 
     @Override
     public void periodic() {
         long id = m_frameId.get();
         double now = Timer.getFPGATimestamp();
-        if (id >= 0 && id != m_lastFrameId) {
+        if (m_cameraEnabled && id >= 0 && id != m_lastFrameId) {
             m_lastFrameId = id;
             m_lastFrameTime = now;
             m_lastGridOk = m_gridOk.get();
@@ -59,6 +84,7 @@ public class Vision extends SubsystemBase {
                     || now - m_frames.peekFirst().time() > VisionConstants.kAverageWindowSec * 3)) {
             m_frames.removeFirst();
         }
+        SmartDashboard.putBoolean("Vision/Camera Enabled", m_cameraEnabled);
         SmartDashboard.putBoolean("Vision/Connected", isConnected());
         SmartDashboard.putBoolean("Vision/Grid OK", m_lastGridOk);
         SmartDashboard.putNumber("Vision/Lit Small Col", getLitSmallCol());

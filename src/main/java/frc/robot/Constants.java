@@ -290,5 +290,27 @@ public final class Constants {
         public static final double kFeedSec = 0.8;               // 每發 Orbit 送球時間（與手動一致）
         public static final double kCooldownSec = 0.3;           // 每發之間的間隔
         public static final double kWaitForVisionSec = 5.0;      // 開局等視覺上線的上限
+
+        // ---- 開場移動：從起始框斜向開到射擊定點，到位後相機才開始拍照運算 ----
+        // 場地座標（自己定義，單位公尺）：原點 = 機器人作業區後緣中心；+X 朝九宮格；+Y 朝左（面向九宮格時的左手邊）。
+        // 依規則圖：作業區 4.0 m 寬 x 5.0 m 深；起始框 0.7 m 寬 x 1.2 m 深，貼在作業區後方左右兩角；
+        // 作業區前緣（檔板）到九宮格 2.5 m，所以九宮格板面在 X = 5.0 + 2.5 = 7.5 m、Y = 0（置中）。
+        public static final double kStartCenterX = 0.60;         // 機器人放在起始框內的 X（框深 1.2 m 的正中）
+        public static final double kStartCenterAbsY = 1.65;      // 起始框中心離中線的距離：4.0/2 - 0.7/2 = 1.65 m
+        public static final double kBoardX = 7.5;                // 九宮格板面 X（僅用來印出距離，不影響移動）
+
+        // 射擊定點（與起始邊對稱，兩邊都開到這一點）。Y = 0 即正對九宮格中線；X 決定射擊距離。
+        // 【待實測決定】距離板面 = kBoardX - kShootX；預設 4.0 m。ShotTable 填表時用的就是這個距離附近。
+        public static final double kShootX = 3.5;
+        public static final double kShootY = 0.0;
+
+        public static final double kDriveMaxSpeedMps = 1.5;      // 最高速度（底盤極速 2.0 m/s，留餘裕）
+        public static final double kDriveMinSpeedMps = 0.15;     // 接近終點的最低速度，避免停在容許誤差外
+        public static final double kDriveMaxAccelMps2 = 2.0;     // 加速與減速度
+        public static final double kDriveToleranceMeters = 0.05; // 到達定點的容許誤差
+        public static final double kDriveHeadingKp = 4.0;        // 車頭保持朝向九宮格的比例增益 (rad/s per rad)
+        public static final double kDriveMaxOmegaRadPerSec = 2.0;
+        public static final double kDriveTimeoutSec = 8.0;       // 逾時就在原地開始射擊
+        public static final double kSettleSec = 0.3;             // 到位後等車身停穩，再開相機
     }
 }

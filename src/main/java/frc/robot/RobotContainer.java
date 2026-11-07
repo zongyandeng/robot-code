@@ -6,8 +6,14 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import java.util.Set;
+
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -22,6 +28,7 @@ import frc.robot.subsystems.Orbit;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
+import frc.robot.commands.AutoDrive;
 import frc.robot.commands.AutoShoot;
 
 import frc.robot.Constants.ShooterConstants;
@@ -53,7 +60,13 @@ public class RobotContainer {
     public final Orbit m_orbit = new Orbit();
     public final Vision m_vision = new Vision();
 
+    /** 起始邊（面向九宮格時機器人的左／右手邊）：+1 = 左起始框，-1 = 右起始框。 */
+    private final SendableChooser<Double> m_startSide = new SendableChooser<>();
+
     public RobotContainer() {
+        m_startSide.setDefaultOption("左起始框", 1.0);
+        m_startSide.addOption("右起始框", -1.0);
+        SmartDashboard.putData("Auto/Start Side", m_startSide);
         configureBindings();
     }
 
@@ -150,17 +163,52 @@ public class RobotContainer {
         // 按下 Start 鍵：啟動視覺自主射擊（等同比賽前 60 秒的 AI 自主流程），最長 60 秒
         // 不依賴 Driver Station 的 Autonomous 模式，Teleop 模式下也能用。按 Back 鍵中止（排程一個佔用同樣機構的空指令，會取消正在跑的射擊流程）
         joystick.start().onTrue(autoShootCommand());
-        joystick.back().onTrue(Commands.runOnce(() -> {}, m_turret, m_hood, m_shooter, m_feeder, m_orbit));
+        joystick.back().onTrue(Commands.runOnce(() -> {}, drivetrain, m_turret, m_hood, m_shooter, m_feeder, m_orbit));
     }
 
-    /** 視覺自主射擊流程，限時 AutoConstants.kAutoDurationSec 秒。 */
+    /**
+     * 完整的前 60 秒自主流程（限時 AutoConstants.kAutoDurationSec 秒，移動時間也算在內）：
+     *   1. 關掉相機（Orin 不拍照、不辨識），依儀表板選的起始邊把里程計設到該起始框
+     *   2. 從起始框斜向直線開到射擊定點，車頭全程朝向九宮格
+     *   3. 到位、車身停穩後才開相機，等視覺上線
+     *   4. 底盤煞車固定，視覺自主射擊（AutoShoot）
+     * 起始邊在「指令開始的瞬間」才讀（defer），所以開賽前在儀表板改選擇都有效。
+     */
     private Command autoShootCommand() {
-        return AutoShoot.routine(m_vision, m_turret, m_hood, m_shooter, m_feeder, m_orbit)
-                .withTimeout(AutoConstants.kAutoDurationSec);
+        return Commands.defer(() -> {
+            final double side = m_startSide.getSelected() == null ? 1.0 : m_startSide.getSelected();
+            final Pose2d startPose = new Pose2d(AutoConstants.kStartCenterX, side * AutoConstants.kStartCenterAbsY, Rotation2d.kZero);
+            final Translation2d shootPoint = new Translation2d(AutoConstants.kShootX, AutoConstants.kShootY);
+
+            return Commands.sequence(
+                    Commands.runOnce(() -> {
+                        m_vision.setCameraEnabled(false);
+                        drivetrain.resetPose(startPose);
+                        SmartDashboard.putString("Auto/Phase", "移動");
+                    }),
+                    new AutoDrive(drivetrain, shootPoint),
+                    Commands.runOnce(() -> SmartDashboard.putString("Auto/Phase", "到位，等車身停穩")),
+                    drivetrain.applyRequest(() -> brake).withTimeout(AutoConstants.kSettleSec),
+                    Commands.runOnce(() -> {
+                        m_vision.setCameraEnabled(true);
+                        SmartDashboard.putString("Auto/Phase", "辨識與射擊");
+                        SmartDashboard.putNumber("Auto/Distance To Board m", AutoConstants.kBoardX - drivetrain.getState().Pose.getX());
+                    }),
+                    // 射擊期間底盤一直煞車（deadline = 射擊流程；煞車指令跟著被取消）
+                    Commands.deadline(
+                            AutoShoot.routine(m_vision, m_turret, m_hood, m_shooter, m_feeder, m_orbit),
+                            drivetrain.applyRequest(() -> brake)))
+                    // 不管是跑完、逾時或 Back 鍵中止，都把相機開回來（手動操作時儀表板才有畫面）
+                    .finallyDo(() -> {
+                        m_vision.setCameraEnabled(true);
+                        SmartDashboard.putString("Auto/Phase", "結束");
+                    });
+        }, Set.of(drivetrain, m_turret, m_hood, m_shooter, m_feeder, m_orbit))
+                .withTimeout(AutoConstants.kAutoDurationSec)
+                .withName("AutoMatch");
     }
 
     public Command getAutonomousCommand() {
-        // 機器人在起始框內定點，不移動底盤，直接用視覺瞄準並射擊
         return autoShootCommand();
     }
 }
