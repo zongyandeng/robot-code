@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -16,6 +18,8 @@ import frc.robot.Constants.OrbitConstants;
 public class Orbit extends SubsystemBase {
     // 導軌傳送馬達 (Kraken X44)
     private final TalonFX orbit_motor = new TalonFX(OrbitConstants.kOrbitMotorID);
+    // 第二顆導軌馬達（跟隨主馬達）
+    private final TalonFX orbit_follower = new TalonFX(OrbitConstants.kOrbitFollowerMotorID);
 
     // 控制請求物件
     private final DutyCycleOut m_dutyCycleControl = new DutyCycleOut(0.0);
@@ -56,18 +60,36 @@ public class Orbit extends SubsystemBase {
         config.CurrentLimits.SupplyCurrentLimitEnable = OrbitConstants.kOrbitSupplyCurrentLimitEnable;
 
         orbit_motor.getConfigurator().apply(config);
+        orbit_follower.getConfigurator().apply(config);
 
     }
 
+    // 跟隨請求：僅位置控制時使用（第二顆馬達跟著主馬達轉）
+    private final Follower m_followerRequest = new Follower(
+        OrbitConstants.kOrbitMotorID,
+        OrbitConstants.kOrbitFollowerOpposed ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned);
+
+    // 第二顆馬達的開環請求（直接給輸出，不靠跟隨模式）
+    private final DutyCycleOut m_followerDutyCycle = new DutyCycleOut(0.0);
+
     /**
-     * 以指定功率比率運轉導軌 (開環 DutyCycle)
+     * 以指定功率比率運轉導軌 (開環 DutyCycle)：兩顆馬達各自直接輸出，第二顆依設定可反向
      * @param speed 輸出功率 (-1.0 ~ 1.0)
      */
     public Command runOrbitCommand(double speed) {
         return this.runEnd(
-            () -> orbit_motor.setControl(m_dutyCycleControl.withOutput(speed)),
-            () -> orbit_motor.stopMotor()
+            () -> {
+                orbit_motor.setControl(m_dutyCycleControl.withOutput(speed));
+                orbit_follower.setControl(m_followerDutyCycle.withOutput(
+                    OrbitConstants.kOrbitFollowerOpposed ? -speed : speed));
+            },
+            this::stopAll
         );
+    }
+
+    private void stopAll() {
+        orbit_motor.stopMotor();
+        orbit_follower.stopMotor();
     }
 
     /**
@@ -88,7 +110,7 @@ public class Orbit extends SubsystemBase {
      * 停止導軌馬達
      */
     public Command stopOrbitCommand() {
-        return this.runOnce(orbit_motor::stopMotor);
+        return this.runOnce(this::stopAll);
     }
 
     /**
@@ -99,6 +121,7 @@ public class Orbit extends SubsystemBase {
         return this.run(() -> {
             m_targetPosition = targetRotations;
             orbit_motor.setControl(m_motionMagicVoltage.withPosition(m_targetPosition));
+            orbit_follower.setControl(m_followerRequest);
         });
     }
 
@@ -112,6 +135,15 @@ public class Orbit extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // 第二顆馬達診斷數據：判斷它有沒有收到指令、有沒有出力、有沒有故障
+        SmartDashboard.putNumber("Orbit2/Current (A)", orbit_follower.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Orbit2/Motor Voltage (V)", orbit_follower.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Orbit2/Velocity (RPS)", orbit_follower.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("Orbit2/Supply Voltage (V)", orbit_follower.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Orbit2/Fault Field", orbit_follower.getFaultField().getValueAsDouble());
+        SmartDashboard.putNumber("Orbit2/Sticky Fault Field", orbit_follower.getStickyFaultField().getValueAsDouble());
+        SmartDashboard.putBoolean("Orbit2/Connected", orbit_follower.isConnected());
+
         // 發布遙測數據到 SmartDashboard
         SmartDashboard.putNumber("Orbit/Velocity (RPS)", orbit_motor.getRotorVelocity().getValueAsDouble());
         SmartDashboard.putNumber("Orbit/Position (Rotations)", orbit_motor.getPosition().getValueAsDouble());

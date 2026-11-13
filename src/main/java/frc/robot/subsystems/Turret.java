@@ -69,6 +69,7 @@ public class Turret extends SubsystemBase{
         return this.runOnce(() -> {
             turret_motor.setPosition(0.0);
             m_targetPosition = 0.0;
+            turret_motor.setControl(m_motionMagicVoltage.withPosition(0.0)); // 讓馬達的目標也回到 0，避免啟用時衝回舊目標
         });
     }
 
@@ -82,6 +83,18 @@ public class Turret extends SubsystemBase{
             turret_motor.setControl(m_motionMagicVoltage.withPosition(m_targetPosition));
         });
     }
+    /**
+     * 相對微調：以目前目標位置為基準，增減指定圈數（限制在軟體限位內）
+     * @param deltaRotations 要增減的機構端圈數（1 度 = 1/360 圈）
+     */
+    public Command nudgeCommand(double deltaRotations) {
+        return this.runOnce(() -> {
+            m_targetPosition = Math.max(TurretConstants.kTurretReverseSoftLimitThreshold,
+                    Math.min(TurretConstants.kTurretForwardSoftLimitThreshold, m_targetPosition + deltaRotations));
+            turret_motor.setControl(m_motionMagicVoltage.withPosition(m_targetPosition));
+        });
+    }
+
     public boolean isAtTargetPosition() {
         double currentPosition = turret_motor.getPosition().getValueAsDouble();
         return Math.abs(currentPosition - m_targetPosition) < TurretConstants.kTurretPositionToleranceRotations;

@@ -15,7 +15,9 @@ import frc.robot.Constants.ShooterConstants;
  * 現在每一排只放兩個點，數值都是目前手動操作的預設值（Hood 預設高位、Shooter 預設轉速），
  * 因此機器人行為和手動按鍵一樣，不是量測過的結果。
  * 填法：在固定點發射，記下「距離 (m)、能進球的 Hood 圈數、Shooter RPS」，加進對應那一排的 put(...)。
- * 距離用視覺回報的 dist_m（Vision/dist_m 陣列）；點越多、涵蓋範圍越廣越準，表外會取最近端的值。
+ * 距離看儀表板／SmartDashboard 的 AutoShoot/Distance m（AutoShoot/Distance Source 說明來源：
+ * 有深度相機時是視覺的 dist_m，一般 USB 相機則是里程計推算的值）。填表與實際射擊要用同一種距離來源。
+ * 點越多、涵蓋範圍越廣越準，表外會取最近端的值。
  */
 public final class ShotTable {
     public record Shot(double hoodRotations, double shooterRps) {}

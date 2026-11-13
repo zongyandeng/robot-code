@@ -6,6 +6,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -18,7 +19,7 @@ public class Hood extends SubsystemBase {
 
     private final MotionMagicVoltage m_motionMagicVoltage = new MotionMagicVoltage(HoodConstants.kHoodMotionMagicVoltage);
 
-    private double m_targetPosition = HoodConstants.kHoodStowedPositionRotations; // 目標位置 (圈數)
+    private double m_targetPosition = HoodConstants.kHoodStartPositionRotations; // 目標位置 (圈數)，開電時在最高角度
 
     public Hood() {
         var config = new TalonFXConfiguration();
@@ -55,7 +56,7 @@ public class Hood extends SubsystemBase {
         config.CurrentLimits.SupplyCurrentLimitEnable = HoodConstants.kHoodSupplyCurrentLimitEnable;
         
         hood_motor.getConfigurator().apply(config);
-        hood_motor.setPosition(0.0); // 開電初始化自動將當前位置校準為 0 圈 (收納位置)
+        hood_motor.setPosition(HoodConstants.kHoodStartPositionRotations); // 開電初始化：把當前位置視為最高角度
 
         // 在 SmartDashboard 提供一鍵歸零按鈕 (支援在 Disabled 狀態下推正機構後手動歸零)
         SmartDashboard.putData("Hood/Zero Position", zeroPositionCommand().ignoringDisable(true));
@@ -67,8 +68,9 @@ public class Hood extends SubsystemBase {
      */
     public Command zeroPositionCommand() {
         return this.runOnce(() -> {
-            hood_motor.setPosition(0.0);
-            m_targetPosition = 0.0;
+            hood_motor.setPosition(HoodConstants.kHoodStartPositionRotations);
+            m_targetPosition = HoodConstants.kHoodStartPositionRotations;
+            hood_motor.setControl(m_motionMagicVoltage.withPosition(m_targetPosition)); // 讓馬達的目標也回到起始位置，避免啟用時衝回舊目標
         });
     }
 
@@ -84,6 +86,21 @@ public class Hood extends SubsystemBase {
         });
     }
 
+    /**
+     * 相對微調：以目前目標位置為基準，增減指定圈數（限制在軟體限位內）
+     * @param deltaRotations 要增減的機構端圈數（1 度 = 1/360 圈）
+     */
+    public Command nudgeCommand(double deltaRotations) {
+        return this.runOnce(() -> {
+            m_targetPosition = Math.max(HoodConstants.kHoodReverseSoftLimitThreshold,
+                    Math.min(HoodConstants.kHoodForwardSoftLimitThreshold, m_targetPosition + deltaRotations));
+            hood_motor.setControl(m_motionMagicVoltage.withPosition(m_targetPosition));
+        })
+        // 動作後冷卻一段時間，冷卻期間再按鍵會被忽略（kCancelIncoming）
+        .andThen(Commands.waitSeconds(HoodConstants.kHoodNudgeCooldownSec))
+        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
+    }
+
     public boolean isAtTargetPosition() {
         double currentPos = hood_motor.getPosition().getValueAsDouble();
         return Math.abs(currentPos - m_targetPosition) <= HoodConstants.kHoodPositionToleranceRotations;
@@ -93,6 +110,8 @@ public class Hood extends SubsystemBase {
     public void periodic() {
         double currentRot = hood_motor.getPosition().getValueAsDouble();
         SmartDashboard.putNumber("Hood/Position (Rotations)", currentRot);
+        SmartDashboard.putNumber("Hood/Target (Rotations)", m_targetPosition);
+        SmartDashboard.putNumber("Hood/Motor Voltage (V)", hood_motor.getMotorVoltage().getValueAsDouble());
         SmartDashboard.putNumber("Hood/Position (Degrees)", currentRot * 360.0);
         SmartDashboard.putBoolean("Hood/At Target", isAtTargetPosition());
     }    
