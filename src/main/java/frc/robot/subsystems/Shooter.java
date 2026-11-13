@@ -6,6 +6,8 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.signals.InvertedValue;
 
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -85,6 +87,23 @@ public class Shooter extends SubsystemBase{
     /**
     * 推薦：使用 PID 閉環速度控制的差速指令
     */
+    /** 同 runShooterVelocityCommand，但基準轉速每個週期重讀（填表時從儀表板即時調整轉速用）。 */
+    public Command runShooterVelocityCommand(DoubleSupplier baseRPS, double spinFactor){
+        return this.runEnd(() -> {
+            double rps = baseRPS.getAsDouble();
+            m_topTargetRPS = rps * (1.0 - spinFactor);
+            m_bottomTargetRPS = rps * (1.0 + spinFactor);
+            topShooter_motor.setControl(m_velocityControl.withVelocity(m_topTargetRPS));
+            bottomShooter_motor.setControl(m_velocityControl.withVelocity(m_bottomTargetRPS));
+        },
+        () -> {
+            m_topTargetRPS = 0.0;
+            m_bottomTargetRPS = 0.0;
+            topShooter_motor.stopMotor();
+            bottomShooter_motor.stopMotor();
+        });
+    }
+
     public Command runShooterVelocityCommand(double baseRPS, double spinFactor){
         return this.runEnd(() -> {
             m_topTargetRPS = baseRPS * (1.0 - spinFactor);

@@ -28,6 +28,7 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         m_timeAndJoystickReplay.update();
         CommandScheduler.getInstance().run(); 
+        m_robotContainer.tunePeriodic();   // 填表工具：儀表板輸入的仰角
 
         // 提供給儀表板（TEL_YOLO/dashboard）顯示的機器人整體狀態
         SmartDashboard.putBoolean("Robot/Enabled", DriverStation.isEnabled());

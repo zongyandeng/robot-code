@@ -12,6 +12,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -59,6 +60,13 @@ public class RobotContainer {
     public final Orbit m_orbit = new Orbit();
     public final Vision m_vision = new Vision();
 
+    // ---- 填表工具（儀表板寫入）----
+    // 手動射擊轉速：RT 按住時的基準轉速；仰角目標：儀表板輸入角度後，啟用狀態下仰角直接走過去（-1 = 不動作）
+    private static final String kTuneRpsKey = "Tune/Shooter RPS";
+    private static final String kTuneHoodKey = "Tune/Hood Target Deg";
+    private static final double kTuneRpsMax = 110.0;
+    private double m_lastHoodTuneDeg = -1.0;
+
     /** 起始邊（面向九宮格時機器人的左／右手邊）：+1 = 左起始框，-1 = 右起始框。 */
     private final SendableChooser<Double> m_startSide = new SendableChooser<>();
 
@@ -66,6 +74,8 @@ public class RobotContainer {
         m_startSide.setDefaultOption("左起始框", 1.0);
         m_startSide.addOption("右起始框", -1.0);
         SmartDashboard.putData("Auto/Start Side", m_startSide);
+        SmartDashboard.setDefaultNumber(kTuneRpsKey, ShooterConstants.kShooterDefaultRPS);
+        SmartDashboard.setDefaultNumber(kTuneHoodKey, -1.0);
         // 板子鎖定需要機器人位置與速度（場地座標）
         m_vision.setRobotState(() -> drivetrain.getState().Pose, () -> drivetrain.getState().Speeds);
         configureBindings();
@@ -123,8 +133,11 @@ public class RobotContainer {
 
         // 當按住右板機 (Right Trigger) 時，以 60 RPS 基準速度、0.15 差速因子啟動發射器
         // 鬆開右板機時，呼叫停止發射器的命令
+        // 轉速讀儀表板的 Tune/Shooter RPS（預設 = kShooterDefaultRPS），按住時調整也即時生效（填表用）
         joystick.rightTrigger().whileTrue(
-            m_shooter.runShooterVelocityCommand(ShooterConstants.kShooterDefaultRPS, ShooterConstants.kShooterDefaultSpinFactor)
+            m_shooter.runShooterVelocityCommand(
+                () -> MathUtil.clamp(SmartDashboard.getNumber(kTuneRpsKey, ShooterConstants.kShooterDefaultRPS), 0.0, kTuneRpsMax),
+                ShooterConstants.kShooterDefaultSpinFactor)
         ).onFalse(
             m_shooter.stopShooterCommand()
         );
@@ -238,6 +251,18 @@ public class RobotContainer {
         }, Set.of(drivetrain, m_hood, m_shooter, m_feeder, m_orbit))
                 .withTimeout(AutoConstants.kAutoDurationSec)
                 .withName("AutoMatch");
+    }
+
+    /**
+     * 每個週期由 Robot.robotPeriodic 呼叫：儀表板輸入了新的仰角（度）就讓仰角走過去。
+     * 只在啟用時套用；停用時輸入的值會等到啟用後才套用。
+     */
+    public void tunePeriodic() {
+        double deg = SmartDashboard.getNumber(kTuneHoodKey, -1.0);
+        if (deg >= 0.0 && deg != m_lastHoodTuneDeg && DriverStation.isEnabled()) {
+            m_lastHoodTuneDeg = deg;
+            m_hood.setTargetRotations(deg / 360.0);
+        }
     }
 
     public Command getAutonomousCommand() {

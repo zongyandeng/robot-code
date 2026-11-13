@@ -90,6 +90,13 @@ public class Hood extends SubsystemBase {
      * 相對微調：以目前目標位置為基準，增減指定圈數（限制在軟體限位內）
      * @param deltaRotations 要增減的機構端圈數（1 度 = 1/360 圈）
      */
+    /** 直接設定目標位置（限制在軟體限位內）。給儀表板「輸入仰角」用，不經過指令排程。 */
+    public void setTargetRotations(double rotations) {
+        m_targetPosition = Math.max(HoodConstants.kHoodReverseSoftLimitThreshold,
+                Math.min(HoodConstants.kHoodForwardSoftLimitThreshold, rotations));
+        hood_motor.setControl(m_motionMagicVoltage.withPosition(m_targetPosition));
+    }
+
     public Command nudgeCommand(double deltaRotations) {
         return this.runOnce(() -> {
             m_targetPosition = Math.max(HoodConstants.kHoodReverseSoftLimitThreshold,

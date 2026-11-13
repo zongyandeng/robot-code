@@ -18,7 +18,7 @@ public final class Constants {
         public static final double kShooterVelocityVoltage = 0; // 閉環速度控制控制器的初始化預設值
         public static final double kShooterDutyCycleOut = 0;    // 開環百分比控制控制器的初始化預設值
 
-        public static final double kShooterDefaultRPS = 90.0; // 發射輪的預設轉速 (RPS)，用於測試與調整 PID 參數
+        public static final double kShooterDefaultRPS = 75.0; // 發射輪的預設轉速 (RPS)，用於測試與調整 PID 參數
         public static final double kShooterDefaultSpinFactor = 0.15; // 發射輪的預設旋轉因子 (0~1)，用於測試與調整 PID 參數
 
         //用於發佈到圖表的目標轉速追蹤變數
@@ -29,10 +29,10 @@ public final class Constants {
         public static final double kShooterkP = 0.3;          // 比例參數：數值越大，馬達達到目標速度越快
         public static final double kShooterkI = 0.0;            // 積分參數：用於消除靜態誤差，在速度控制中通常設為 0 以防衝過頭
         public static final double kShooterkD = 0.0;          // 微分參數：防震、防止轉速衝過頭
-        public static final double kShooterkV = 0.096;           // 速度前饋：極為重要！根據馬達最大轉速與電壓估算 (12V / 最大轉速 RPS)
+        public static final double kShooterkV = 0.12;            // 速度前饋：極為重要！根據馬達最大轉速與電壓估算 (12V / 最大轉速 RPS)；Kraken X60 約 100 RPS -> 0.12
         public static final double kShooterkS = 0.0;            // 靜態前饋：用於克服摩擦力，通常設為 0
 
-        public static final double kShooterCruiseVelocity = 120.0; // 巡航轉速 (RPS)：馬達達到目標速度後的穩定轉速
+        public static final double kShooterCruiseVelocity = 95.0; // 巡航轉速 (RPS)：馬達達到目標速度後的穩定轉速
         public static final double kShooterAcceleration = 200.0;  // 最大加速度 (RPS/s)：馬達加速到巡航轉速的快慢
         public static final double kShooterJerk = 500.0;            // 加加速度 (Jerk)：限制加速度變化的平滑度 (0 代表不限制)
 
@@ -111,7 +111,7 @@ public final class Constants {
         public static final double kHoodStowedPositionRotations = 0.0; // 仰角收納位置 (圈數)
         public static final double kHoodPresetHighGoalRotations = 1.0 / 360.0; // 仰角高目標位置 (圈數)
         public static final double kHoodStartPositionRotations = 40.0 / 360.0; // 開電 / 初始化時，仰角當下位置視為這個圈數（= 最高角度 = 前端軟體限位）
-        public static final double kHoodNudgeRotations = 3.0 / 360.0;  // 十字鍵每按一下的微調量 (3 度)
+        public static final double kHoodNudgeRotations = 1.0 / 360.0;  // 十字鍵每按一下的微調量 (1 度；填表時需要細調)
         public static final double kHoodNudgeCooldownSec = 0.3;         // 微調後的冷卻時間 (秒)：冷卻期間按鍵無效
         public static final double kHoodPositionToleranceRotations = 0.005; // 仰角位置容忍度 (圈數)：當仰角位置與目標位置差距小於此值時，視為已達到目標位置
 
