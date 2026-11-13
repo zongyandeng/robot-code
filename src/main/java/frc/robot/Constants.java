@@ -326,9 +326,9 @@ public final class Constants {
         public static final double kShootX = 3.5;
         public static final double kShootY = 0.0;
 
-        public static final double kDriveMaxSpeedMps = 1.5;      // 最高速度（底盤極速 2.0 m/s，留餘裕）
+        public static final double kDriveMaxSpeedMps = 1.9;      // 最高速度（底盤設定上限 kSpeedAt12Volts = 2.0 m/s，留一點餘裕）
         public static final double kDriveMinSpeedMps = 0.15;     // 接近終點的最低速度，避免停在容許誤差外
-        public static final double kDriveMaxAccelMps2 = 2.0;     // 加速與減速度
+        public static final double kDriveMaxAccelMps2 = 3.5;     // 加速與減速度（約 0.36 g；太大會打滑、里程計失準）
         public static final double kDriveToleranceMeters = 0.05; // 到達定點的容許誤差
         public static final double kDriveHeadingKp = 4.0;        // 車頭保持朝向九宮格的比例增益 (rad/s per rad)
         public static final double kDriveMaxOmegaRadPerSec = 2.0;
