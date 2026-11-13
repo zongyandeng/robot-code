@@ -14,6 +14,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 /**
@@ -67,8 +68,9 @@ public final class AutoDrive extends Command {
             vy = speed * delta.getY() / dist;
         }
 
-        // 車頭維持 0 度（朝向九宮格）
-        double headingErr = MathUtil.angleModulus(-pose.getRotation().getRadians());
+        // 相機那面維持朝向九宮格（場地 0 度）= 底盤車頭 -kCameraYawOffsetDeg
+        double headingErr = MathUtil.angleModulus(
+                -Math.toRadians(VisionConstants.kCameraYawOffsetDeg) - pose.getRotation().getRadians());
         double omega = MathUtil.clamp(AutoConstants.kDriveHeadingKp * headingErr,
                 -AutoConstants.kDriveMaxOmegaRadPerSec, AutoConstants.kDriveMaxOmegaRadPerSec);
 

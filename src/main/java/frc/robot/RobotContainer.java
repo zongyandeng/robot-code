@@ -216,10 +216,11 @@ public class RobotContainer {
      *   4. 視覺自主射擊（AutoShoot）：每個目標底盤原地轉向瞄準，到位後才送球
      * 起始邊在「指令開始的瞬間」才讀（defer），所以開賽前在儀表板改選擇都有效。
      */
-    /** 儀表板選的起始框中心（場地座標），車頭朝九宮格。 */
+    /** 儀表板選的起始位置（場地座標）。相機那面正對九宮格，所以底盤車頭角度 = -kCameraYawOffsetDeg。 */
     private Pose2d startPose() {
         final double side = m_startSide.getSelected() == null ? 1.0 : m_startSide.getSelected();
-        return new Pose2d(AutoConstants.kStartCenterX, side * AutoConstants.kStartCenterAbsY, Rotation2d.kZero);
+        return new Pose2d(AutoConstants.kStartCenterX, side * AutoConstants.kStartCenterAbsY,
+                Rotation2d.fromDegrees(-frc.robot.Constants.VisionConstants.kCameraYawOffsetDeg));
     }
 
     private Command autoShootCommand() {

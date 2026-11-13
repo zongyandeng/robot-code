@@ -112,15 +112,24 @@ public class Vision extends SubsystemBase {
         return Optional.of(new Translation2d(m_lockXY[index][0], m_lockXY[index][1]));
     }
 
-    /** 相機（＝發射口，在相機正下方）在場地上的位置。 */
-    private static Translation2d cameraPos(Pose2d robot, Rotation2d heading) {
+    /** 相機朝向相對底盤車頭的偏角（見 VisionConstants.kCameraYawOffsetDeg）。 */
+    private static final Rotation2d kCamYaw = Rotation2d.fromDegrees(VisionConstants.kCameraYawOffsetDeg);
+
+    /** 相機（＝發射口，在相機正下方）的場地位置。camHeading = 相機朝向（場地角度），不是底盤車頭。 */
+    private static Translation2d cameraPos(Pose2d robot, Rotation2d camHeading) {
         return robot.getTranslation().plus(
-                new Translation2d(VisionConstants.kCameraForwardM, VisionConstants.kCameraLeftM).rotateBy(heading));
+                new Translation2d(VisionConstants.kCameraForwardM, VisionConstants.kCameraLeftM).rotateBy(camHeading));
+    }
+
+    /** 底盤車頭角度 -> 相機朝向（場地角度）。 */
+    public static Rotation2d cameraHeading(Rotation2d robotHeading) {
+        return robotHeading.plus(kCamYaw);
     }
 
     /**
-     * 用鎖定的板位算瞄準孔 index 的車頭角度與距離。發射口在車身左前方、方向和車頭一致，
-     * 要找的是「讓發射口沿車頭方向的直線穿過孔」的車頭角度；原地轉動時發射口位置也會變，用迭代求解。
+     * 用鎖定的板位算瞄準孔 index 的「底盤車頭角度」與距離。發射口在相機正下方、朝相機方向，
+     * 要找的是「讓發射口沿相機方向的直線穿過孔」的相機朝向；原地轉動時發射口位置也會變，用迭代求解，
+     * 最後扣掉相機偏角換成底盤車頭角度（AutoShoot 轉向用的是底盤角度）。
      */
     public Optional<Aim> aimFromLock(int index, Pose2d robot) {
         Optional<Translation2d> t = lockedHole(index);
@@ -129,12 +138,12 @@ public class Vision extends SubsystemBase {
         }
         Translation2d target = t.get();
         double th = Math.atan2(target.getY() - robot.getY(), target.getX() - robot.getX());
-        for (int k = 0; k < 6; k++) {
+        for (int k = 0; k < 6; k++) {                       // th = 相機朝向
             Translation2d cam = cameraPos(robot, new Rotation2d(th));
             th = Math.atan2(target.getY() - cam.getY(), target.getX() - cam.getX());
         }
         Translation2d cam = cameraPos(robot, new Rotation2d(th));
-        return Optional.of(new Aim(MathUtil.angleModulus(th), cam.getDistance(target)));
+        return Optional.of(new Aim(MathUtil.angleModulus(th - kCamYaw.getRadians()), cam.getDistance(target)));
     }
 
     /** 停著、且最近窗口內每一幀都看到全部 12 個孔時，把孔換算成場地座標鎖定（每個 periodic 都會更新）。 */
@@ -163,15 +172,16 @@ public class Vision extends SubsystemBase {
             return;
         }
         Pose2d robot = m_pose.get();
-        Translation2d cam = cameraPos(robot, robot.getRotation());
+        Rotation2d camHeading = cameraHeading(robot.getRotation());
+        Translation2d cam = cameraPos(robot, camHeading);
         double[][] xy = new double[VisionConstants.kHoleCount][2];
         for (int i = 0; i < VisionConstants.kHoleCount; i++) {
             Optional<Target> t = getTarget(i);
             if (t.isEmpty() || Double.isNaN(t.get().distM())) {
                 return;
             }
-            // 偏角往右為正；場地角度逆時針為正 -> 孔的方向 = 車頭角度 - 偏角
-            double ang = robot.getRotation().getRadians() - Math.toRadians(t.get().bearingDeg());
+            // 偏角（相對相機）往右為正；場地角度逆時針為正 -> 孔的方向 = 相機朝向 - 偏角
+            double ang = camHeading.getRadians() - Math.toRadians(t.get().bearingDeg());
             xy[i][0] = cam.getX() + t.get().distM() * Math.cos(ang);
             xy[i][1] = cam.getY() + t.get().distM() * Math.sin(ang);
         }

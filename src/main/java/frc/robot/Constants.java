@@ -261,7 +261,14 @@ public final class Constants {
 
         // 轉塔已拆除：左右瞄準改由底盤轉向（見 AutoConstants 的 kAim*）
 
-        // 相機（＝發射口，就在相機正下方、朝車頭方向）相對「車身中心」的位置，公尺。前為正、左為正。
+        // 相機朝向相對「底盤程式的車頭（swerve 的 0 度方向）」的角度，逆時針為正。
+        // 2026-11-13 實測：底盤程式的「往前」其實是機器人（以相機那面當車頭）的右邊，
+        // 相機朝向程式的「左邊」，所以 +90。遙控手感正常是因為手把軸向也剛好差 90 度互相抵消。
+        // 將來若重新設定底盤讓程式車頭＝相機那面（並修正手把軸向），這裡改回 0。
+        public static final double kCameraYawOffsetDeg = 90.0;
+
+        // 相機（＝發射口，就在相機正下方、朝相機方向）相對「車身中心」的位置，公尺，
+        // 以「相機那面當車頭」量：前為正、左為正（程式會再依 kCameraYawOffsetDeg 轉到底盤座標）。
         // 機器人 50x50 cm，相機離左邊框 8 cm、離前邊框 11 cm -> 中心前方 25-11=14 cm、左方 25-8=17 cm
         public static final double kCameraForwardM = 0.14;
         public static final double kCameraLeftM = 0.17;
